@@ -1,9 +1,11 @@
 class Block
 {
+  PVector pos;
   int x, y, z;
 
-  Block(int x, int y, int z)
+  Block(PVector pos, int x, int y, int z)
   {
+    this.pos = pos;
     this.x = x;
     this.y = y;
     this.z = z;
@@ -11,11 +13,8 @@ class Block
 
   void render()
   {
-    fill(#103110);
-    stroke(0);
-    strokeWeight(1);
     push();
-    translate(x, y, z);
+    translate(pos.x, pos.y, pos.z);
     box(blockSize);
     pop();
   }

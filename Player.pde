@@ -3,8 +3,8 @@ class Player
   float yaw, pitch, speed;
   int chunkX, chunkZ;
   PVector pos, lastPos, view, vel;
-  boolean jumping, moving;
-  int floorPos;
+  boolean jumping, climbing;
+  float floorPos;
 
   public Player()
   {
@@ -27,7 +27,7 @@ class Player
   //updates player view
   void updateCamera()
   {
-    floorPos = world.getCurrentChunk().getCurrentBlock().y - 100;
+    floorPos = world.getCurrentChunk().getCurrentBlock().pos.y - 100;
     view = new PVector(cos(yaw) * cos(pitch), -sin(pitch), sin(yaw) * cos(pitch)).mult(-width * .1);
     perspective(PI/2.5, float(width)/height, .01, width * width);
     camera(pos.x, pos.y, pos.z, pos.x + view.x, pos.y + view.y, pos.z + view.z, 0, 1, 0);
@@ -44,7 +44,7 @@ class Player
     //FPS
     fill(255);
     textSize(15);
-    text("Frame Rate: " + (int)frameRate, width * .025, height * .01);
+    text("Frame Rate: " + (int)frameRate, width/2, height * .05);
     textAlign(CENTER);
 
     //Cross hair
@@ -95,25 +95,21 @@ class Player
       {
         pos.x += view.x * speed;
         pos.z += view.z * speed;
-        moving = true;
       }
       if (keyDown('S'))
       {
-        pos.x -= view.x * speed;
-        pos.z -= view.z * speed;
-        moving = true;
+        pos.x += -view.x * speed;
+        pos.z += -view.z * speed;
       }
       if (keyDown('A'))
       {
-        pos.x -= cos(yaw - PI/2) * cos(pitch) * 10;
-        pos.z -= sin(yaw - PI/2) * cos(pitch) * 10;
-        moving = true;
+        pos.x += -cos(yaw - PI/2) * cos(pitch) * 10;
+        pos.z += -sin(yaw - PI/2) * cos(pitch) * 10;
       }
       if (keyDown('D'))
       {
         pos.x += cos(yaw - PI/2) * cos(pitch) * 10;
         pos.z += sin(yaw - PI/2) * cos(pitch) * 10;
-        moving = true;
       }
 
       //Jump
@@ -123,14 +119,9 @@ class Player
         {
           jumping = true;
           vel.y = -10;
-          moving = true;
         }
       }
     }
-
-    //no movement
-    else
-      moving = false;
   }
 
   //Keeps player in map
@@ -163,8 +154,8 @@ class Player
 
     if (pos.y > floorPos)
     {
-      vel.y = 0;
       pos.y = floorPos;
+      vel.y = 0;
       jumping = false;
     }
   }

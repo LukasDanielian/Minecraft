@@ -31,6 +31,15 @@ class World
         chunks.put(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i]), chunk);
       }
     }
+    
+    if(world != null)
+      updateChunkEdges();
+  }
+  
+  void updateChunkEdges()
+  {
+    for (int i = 0; i < DEPTH_DISP.length; i++)
+      chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i])).updateEdges();
   }
 
   //returns current chunk of player

@@ -10,7 +10,7 @@ World world;
 int blockSize = 50;
 int numBlocks = 16;
 int chunkSize = numBlocks * blockSize;
-float noiseScl = .005;
+float noiseScl = .035;
 
 void setup()
 {
@@ -34,7 +34,7 @@ void setup()
 void draw()
 {
   background(#16819D);
-
+  
   player.render();
   world.render();
   player.renderHUD();
