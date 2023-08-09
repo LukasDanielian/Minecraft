@@ -49,8 +49,10 @@ boolean keyDown(int key)
   return keys[key];
 }
 
-//Checks if mouse buttons are pressed
 void mousePressed()
 {
-   
+  if(player.lookingAt != null)
+  {
+    player.lookingAt.chunk.remove(player.lookingAt);
+  }
 }

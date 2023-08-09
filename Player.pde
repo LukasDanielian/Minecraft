@@ -5,7 +5,7 @@ class Player
   PVector pos, lastPos, view, vel;
   boolean jumping, climbing;
   Chunk currChunk;
-  Block currBlock;
+  Block currBlock, lookingAt;
 
   public Player()
   {

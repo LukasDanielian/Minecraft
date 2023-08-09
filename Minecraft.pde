@@ -12,6 +12,9 @@ int numBlocks = 16;
 int chunkSize = numBlocks * blockSize;
 float noiseScl = .01;
 PShape stone, dirt, sand;
+int[] xDisp = {-1,1,0,0,0,0};
+int[] yDisp = {0,0,0,0,-1,1};
+int[] zDisp = {0,0,-1,1,0,0};
 
 void setup()
 {
@@ -53,7 +56,7 @@ void draw()
 {
   background(#16819D);
   lights();
-  directionalLight(200, 200, 190, .75, -1, .75);
+  directionalLight(200, 200, 200, .75, -1, .75);
 
   player.render();
   world.render();

@@ -30,7 +30,7 @@ class Chunk
         int y = (int)map(noise(noiseX, noiseZ) * noise(noiseX + 50, noiseZ + 50), 0, 1, 50, 200);
         int blockY = y * blockSize;
 
-        blocks[y][x][z] = new Block(new PVector(blockX, blockY, blockZ), x, y, z);
+        blocks[y][x][z] = new Block(new PVector(blockX, blockY, blockZ), x, y, z,this);
         blockZ += blockSize;
         noiseZ += noiseScl;
       }
@@ -63,9 +63,38 @@ class Chunk
         }
 
         for (int i = 1; i < largestGap; i++)
-          blocks[block.y+i][x][z] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), x, block.y + i, z);
+          blocks[block.y+i][x][z] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), x, block.y + i, z,this);
       }
     }
+  }
+  
+  void remove(Block block)
+  {
+    Block[] neighbors = getAllNeighbors(block);
+    
+    for(int i = 0; i < neighbors.length; i++) 
+    {
+      Block nBlock = neighbors[i];
+      
+      if(nBlock == null && (getTopBlock(block.x + xDisp[i], block.z + zDisp[i]) == null || block.y + yDisp[i] > getTopBlock(block.x + xDisp[i], block.z + zDisp[i]).y))
+      {
+        blocks[block.y + yDisp[i]][block.x + xDisp[i]][block.z + zDisp[i]] = new Block(new PVector(block.pos.x + xDisp[i] * blockSize,block.pos.y + yDisp[i] * blockSize,block.pos.z + zDisp[i] * blockSize),block.x + xDisp[i],block.y + yDisp[i],block.z + zDisp[i],this);
+      }
+    }
+    
+    blocks[block.y][block.x][block.z] = null;
+  }
+  
+  Block[] getAllNeighbors(Block block)
+  {
+    Block[] neighbors = new Block[6];
+    
+    for(int i = 0; i < xDisp.length; i++)
+    {
+      neighbors[i] = blocks[block.y + yDisp[i]][block.x + xDisp[i]][block.z + zDisp[i]];
+    }
+    
+    return neighbors;
   }
 
   //renders every block in chunk
@@ -84,11 +113,9 @@ class Chunk
         }
       }
     }
-    
-    checkHitScan();
   }
 
-  void checkHitScan()
+  Block checkHitScan()
   {
     ArrayList<Block> blocksHit = new ArrayList<Block>();
     for (int y = 0; y < blocks.length; y++)
@@ -115,16 +142,16 @@ class Chunk
       float dist = dist(player.pos.x, player.pos.y, player.pos.z, block.pos.x, block.pos.y, block.pos.z);
 
       if (dist < closest)
+      {
         num = i;
+        closest = dist;
+      }
     }
 
-    if (num != -1)
-    {
-      //Block toRem = blocksHit.get(num);
-      //blocks[toRem.y][toRem.x][toRem.z] = null;
-      
-      blocksHit.get(num).lookingAt = true;
-    }
+    if (num != -1) 
+      return blocksHit.get(num);
+    
+    return null;
   }
 
   //returns 4 neighbors of given block: 0 = left, 1 = right, 2 = front, 3 = back

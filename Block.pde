@@ -4,13 +4,15 @@ class Block implements Comparable<Block>
   int x, y, z;
   PShape cube;
   boolean lookingAt;
+  Chunk chunk;
 
-  Block(PVector pos, int x, int y, int z)
+  Block(PVector pos, int x, int y, int z, Chunk chunk)
   {
     this.pos = pos;
     this.x = x;
     this.y = y;
     this.z = z;
+    this.chunk = chunk;
     float noise = noise(pos.x/1000, pos.z/1000);
 
     if (noise > .66)
@@ -25,11 +27,15 @@ class Block implements Comparable<Block>
   {
     push();
     translate(pos.x, pos.y, pos.z);
-    if(lookingAt)
+    if (lookingAt)
+    {
+      fill(255);
       box(blockSize);
-    shape(cube);
+    }
+    else
+      shape(cube);
     pop();
-    
+
     lookingAt = false;
   }
 
@@ -38,17 +44,31 @@ class Block implements Comparable<Block>
     return block.y - y;
   }
 
-
-
-
-  boolean hitScan(PVector rayOrigin, PVector rayDirection) 
+  //little help from chatGPT
+  boolean hitScan(PVector rayOrigin, PVector rayDirection)
   {
     PVector minBounds = new PVector(pos.x - blockSize / 2, pos.y - blockSize / 2, pos.z - blockSize / 2);
     PVector maxBounds = new PVector(pos.x + blockSize / 2, pos.y + blockSize / 2, pos.z + blockSize / 2);
-    float tmin = (minBounds.x - rayOrigin.x) / rayDirection.x;
-    float tmax = (maxBounds.x - rayOrigin.x) / rayDirection.x;
-    float tymin = (minBounds.y - rayOrigin.y) / rayDirection.y;
-    float tymax = (maxBounds.y - rayOrigin.y) / rayDirection.y;
+    PVector invRayDirection = new PVector(1.0 / rayDirection.x, 1.0 / rayDirection.y, 1.0 / rayDirection.z);
+    float tmin, tmax, tymin, tymax, tzmin, tzmax;
+
+    if (invRayDirection.x >= 0)
+    {
+      tmin = (minBounds.x - rayOrigin.x) * invRayDirection.x;
+      tmax = (maxBounds.x - rayOrigin.x) * invRayDirection.x;
+    } else
+    {
+      tmin = (maxBounds.x - rayOrigin.x) * invRayDirection.x;
+      tmax = (minBounds.x - rayOrigin.x) * invRayDirection.x;
+    }
+
+    if (invRayDirection.y >= 0) {
+      tymin = (minBounds.y - rayOrigin.y) * invRayDirection.y;
+      tymax = (maxBounds.y - rayOrigin.y) * invRayDirection.y;
+    } else {
+      tymin = (maxBounds.y - rayOrigin.y) * invRayDirection.y;
+      tymax = (minBounds.y - rayOrigin.y) * invRayDirection.y;
+    }
 
     if ((tmin > tymax) || (tymin > tmax))
       return false;
@@ -59,8 +79,13 @@ class Block implements Comparable<Block>
     if (tymax < tmax)
       tmax = tymax;
 
-    float tzmin = (minBounds.z - rayOrigin.z) / rayDirection.z;
-    float tzmax = (maxBounds.z - rayOrigin.z) / rayDirection.z;
+    if (invRayDirection.z >= 0) {
+      tzmin = (minBounds.z - rayOrigin.z) * invRayDirection.z;
+      tzmax = (maxBounds.z - rayOrigin.z) * invRayDirection.z;
+    } else {
+      tzmin = (maxBounds.z - rayOrigin.z) * invRayDirection.z;
+      tzmax = (minBounds.z - rayOrigin.z) * invRayDirection.z;
+    }
 
     if ((tmin > tzmax) || (tzmin > tmax))
       return false;
