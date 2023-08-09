@@ -4,7 +4,8 @@ class Player
   int chunkX, chunkZ;
   PVector pos, lastPos, view, vel;
   boolean jumping, climbing;
-  float floorPos;
+  Chunk currChunk;
+  Block currBlock;
 
   public Player()
   {
@@ -24,10 +25,15 @@ class Player
     updateCamera();
   }
 
+  void setCurrentBlock()
+  {
+    currChunk = world.getCurrentChunk();
+    currBlock = currChunk.getCurrentBlock();
+  }
+
   //updates player view
   void updateCamera()
   {
-    floorPos = world.getCurrentChunk().getCurrentBlock().pos.y - 100;
     view = new PVector(cos(yaw) * cos(pitch), -sin(pitch), sin(yaw) * cos(pitch)).mult(-width * .1);
     perspective(PI/2.5, float(width)/height, .01, width * width);
     camera(pos.x, pos.y, pos.z, pos.x + view.x, pos.y + view.y, pos.z + view.z, 0, 1, 0);
@@ -127,20 +133,67 @@ class Player
   //Keeps player in map
   void checkBounds()
   {
-    Chunk chunk = world.getCurrentChunk();
+    Block[] neighbors = currChunk.getNeighbors(currBlock);
+    
+    if (currBlock != null)
+    {
+      if (pos.x < currBlock.pos.x - blockSize/2 + 5 && currBlock.compareTo(neighbors[0]) < 0 && pos.y + 100 > neighbors[0].pos.y)
+      {
+        if (!jumping)
+        {
+          jumping = true;
+          vel.y = -10;
+        }
+        pos.x = currBlock.pos.x - blockSize/2 + 5;
+      }
+      if (pos.x > currBlock.pos.x + blockSize/2 - 5 && currBlock.compareTo(neighbors[1]) < 0 && pos.y + 100 > neighbors[1].pos.y)
+      {
+        if (!jumping)
+        {
+          jumping = true;
+          vel.y = -10;
+        }
+        pos.x = currBlock.pos.x + blockSize/2 - 5;
+      }
+      if (pos.z < currBlock.pos.z - blockSize/2 + 5 && currBlock.compareTo(neighbors[2]) < 0 && pos.y + 100 > neighbors[2].pos.y)
+      {
+        if (!jumping)
+        {
+          jumping = true;
+          vel.y = -10;
+        }
+        pos.z = currBlock.pos.z - blockSize/2 + 5;
+      }
+      if (pos.z > currBlock.pos.z + blockSize/2 - 5 && currBlock.compareTo(neighbors[3]) < 0 && pos.y + 100 > neighbors[3].pos.y)
+      {
+        if (!jumping)
+        {
+          jumping = true;
+          vel.y = -10;
+        }
+        pos.z = currBlock.pos.z + blockSize/2 - 5;
+      }
+      
+      currBlock = currChunk.getCurrentBlock();
+    }
 
-    if (pos.x < chunk.x - chunkSize/2)
-      chunkX--;
-    else if (pos.x > chunk.x + chunkSize/2)
-      chunkX++;
-    else if (pos.z < chunk.z - chunkSize/2)
-      chunkZ--;
-    else if (pos.z > chunk.z + chunkSize/2)
-      chunkZ++;
-    else
-      return;
+    if (currChunk != null)
+    {
+      if (pos.x < currChunk.x - chunkSize/2)
+        chunkX--;
+      else if (pos.x > currChunk.x + chunkSize/2)
+        chunkX++;
+      else if (pos.z < currChunk.z - chunkSize/2)
+        chunkZ--;
+      else if (pos.z > currChunk.z + chunkSize/2)
+        chunkZ++;
+      else
+        return;
 
-    world.updateChunks();
+      world.updateChunks();
+      world.updateBlocksUnder();
+      currChunk = world.getCurrentChunk();
+    }
   }
 
   //Checks all movement conditions
@@ -149,12 +202,15 @@ class Player
     pos.add(vel);
 
     //Jumping animation
-    if (jumping || pos.y < floorPos)
-      vel.y++;
-
-    if (pos.y > floorPos)
+    if (jumping || pos.y < currBlock.pos.y - 100)
     {
-      pos.y = floorPos;
+      vel.y++;
+      setCurrentBlock();
+    }
+
+    if (pos.y > currBlock.pos.y - 100)
+    {
+      pos.y = currBlock.pos.y - 100;
       vel.y = 0;
       jumping = false;
     }

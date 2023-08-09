@@ -7,7 +7,6 @@ class World
   public World()
   {
     chunks = new HashMap<String, Chunk>();
-    updateChunks();
   }
 
   //renders 9 chunks including current and all adjecent chunks
@@ -31,15 +30,12 @@ class World
         chunks.put(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i]), chunk);
       }
     }
-    
-    if(world != null)
-      updateChunkEdges();
   }
   
-  void updateChunkEdges()
+  void updateBlocksUnder()
   {
     for (int i = 0; i < DEPTH_DISP.length; i++)
-      chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i])).updateEdges();
+      chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i])).updateBlocksUnder();
   }
 
   //returns current chunk of player

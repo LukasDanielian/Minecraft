@@ -2,12 +2,8 @@ class Chunk
 {
   int x, z;
   float noiseX, noiseZ;
-  int[] DEPTH_DISP = {0, -1, 0, 1};
-  int[] HORIZ_DISP = {-1, 0, 1, 0};
   Block[][][] blocks;
   //y x z
-  
-  float r, g, b;
 
   Chunk(int x, int z)
   {
@@ -16,11 +12,9 @@ class Chunk
     this.z = z * chunkSize;
     blocks = new Block[256][numBlocks][numBlocks];
     generateChunk();
-    r = random(0, 255);
-    g = random(0, 255);
-    b = random(0, 255);
   }
 
+  //Builds single floor layer of blocks at every x and z pos for chunk
   void generateChunk()
   {
     int blockX = x + (-blockSize * numBlocks/2) + blockSize/2;
@@ -44,41 +38,39 @@ class Chunk
       blockX += blockSize;
       noiseX += noiseScl;
     }
+  }
 
+  //Fills in open spots under blocks from large gaps between y values of blocks
+  void updateBlocksUnder()
+  {
     for (int x = 0; x < numBlocks; x++)
     {
       for (int z = 0; z < numBlocks; z++)
       {
         Block block = getTopBlock(x, z);
-        int y = block.y;
         int largestGap = 1;
+        Block[] neighbors = getNeighbors(block);
 
-        for (int i = 0; i < DEPTH_DISP.length; i++)
+        for (int i = 0; i < neighbors.length; i++)
         {
-          if (inBounds(x + HORIZ_DISP[i], z + DEPTH_DISP[i]))
+          if (neighbors[i] != null)
           {
-            Block adjecent = getTopBlock(x + HORIZ_DISP[i], z + DEPTH_DISP[i]);
-            int gap = adjecent.y - block.y;
+            int gap = block.compareTo(neighbors[i]);
 
             if (gap > largestGap)
               largestGap = gap;
           }
         }
 
-        if (largestGap > 1)
-        {
-          for (int i = 1; i < largestGap; i++)
-          {
-            blocks[y + i][x][z] = new Block(new PVector(block.pos.x, block.pos.y + (i*blockSize), block.pos.z), x, y+i, z);
-          }
-        }
+        for (int i = 1; i < largestGap; i++)
+          blocks[block.y+i][x][z] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), x, block.y + i, z);
       }
     }
   }
 
+  //renders every block in chunk
   void render()
   {
-    fill(r, g, b);
     for (int y = 0; y < blocks.length; y++)
     {
       for (int x = 0; x < blocks[y].length; x++)
@@ -94,81 +86,69 @@ class Chunk
     }
   }
 
-  void updateEdges()
+  //returns 4 neighbors of given block: 0 = left, 1 = right, 2 = front, 3 = back
+  Block[] getNeighbors(Block block)
   {
-    Chunk chunk = world.chunks.get(world.cordString((x/chunkSize) - 1, z/chunkSize));
+    Block[] neighbors = new Block[4];
 
-    if (chunk != null)
+    //Left block in diff chunk
+    if (block.x - 1 < 0)
     {
-      for (int z = 0; z < numBlocks; z++)
-      {
-        Block block = getTopBlock(0, z);
-        Block adjecent = chunk.getTopBlock(15, z);
+      Chunk chunk = world.chunks.get(world.cordString(x/chunkSize - 1, z/chunkSize));
 
-        int gap = adjecent.y - block.y;
-
-        for (int i = 1; i < gap; i++)
-          blocks[block.y+i][0][z] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), 0, block.y + (i * blockSize), z);
-      }
+      if (chunk != null)
+        neighbors[0] = chunk.getTopBlock(15, block.z);
     }
 
-    chunk = world.chunks.get(world.cordString((x/chunkSize) + 1, z/chunkSize));
+    //same chunk
+    else
+      neighbors[0] = getTopBlock(block.x-1, block.z);
 
-    if (chunk != null)
+    //Right block in diff chunk
+    if (block.x + 1 > 15)
     {
-      for (int z = 0; z < numBlocks; z++)
-      {
-        Block block = getTopBlock(15, z);
-        Block adjecent = chunk.getTopBlock(0, z);
+      Chunk chunk = world.chunks.get(world.cordString(x/chunkSize + 1, z/chunkSize));
 
-        int gap = adjecent.y - block.y;
-
-        for (int i = 1; i < gap; i++)
-          blocks[block.y+i][15][z] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), 15, block.y + (i * blockSize), z);
-      }
+      if (chunk != null)
+        neighbors[1] = chunk.getTopBlock(0, block.z);
     }
 
-    chunk = world.chunks.get(world.cordString(x/chunkSize, (z/chunkSize) - 1));
+    //same chunk
+    else
+      neighbors[1] = getTopBlock(block.x+1, block.z);
 
-    if (chunk != null)
+    //front block in diff chunk
+    if (block.z - 1 < 0)
     {
-      for (int x = 0; x < numBlocks; x++)
-      {
-        Block block = getTopBlock(x, 0);
-        Block adjecent = chunk.getTopBlock(x, 15);
-        
-        int gap = adjecent.y - block.y;
-        
-        for(int i = 1; i < gap; i++)
-          blocks[block.y+i][x][0] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), x, block.y + (i * blockSize), 0);
-      }
-    }
-    
-    chunk = world.chunks.get(world.cordString(x/chunkSize, (z/chunkSize) + 1));
+      Chunk chunk = world.chunks.get(world.cordString(x/chunkSize, z/chunkSize - 1));
 
-    if (chunk != null)
+      if (chunk != null)
+        neighbors[2] = chunk.getTopBlock(block.x, 15);
+    }
+
+    //same chunk
+    else
+      neighbors[2] = getTopBlock(block.x, block.z-1);
+
+    //back chunk in diff chunk
+    if (block.z + 1 > 15)
     {
-      for (int x = 0; x < numBlocks; x++)
-      {
-        Block block = getTopBlock(x, 15);
-        Block adjecent = chunk.getTopBlock(x, 0);
-        
-        int gap = adjecent.y - block.y;
-        
-        for(int i = 1; i < gap; i++)
-          blocks[block.y+i][x][15] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), x, block.y + (i * blockSize), 15);
-      }
-    }
-  }
+      Chunk chunk = world.chunks.get(world.cordString(x/chunkSize, z/chunkSize + 1));
 
-  boolean inBounds(int x, int z)
-  {
-    return x >= 0 && x <= 15 && z >= 0 && z <= 15;
+      if (chunk != null)
+        neighbors[3] = chunk.getTopBlock(block.x, 0);
+    }
+
+    //same chunk
+    else
+      neighbors[3] = getTopBlock(block.x, block.z+1);
+
+    return neighbors;
   }
 
   //Returns floor block at x and z pos
   Block getTopBlock(int x, int z)
-  {      
+  {
     for (int y = 0; y < 256; y++)
     {
       if (blocks[y][x][z] != null)
@@ -183,6 +163,12 @@ class Chunk
   {
     int x = (int)map(player.pos.x, this.x - chunkSize/2, this.x + chunkSize/2, 0, 16);
     int z = (int)map(player.pos.z, this.z - chunkSize/2, this.z + chunkSize/2, 0, 16);
+
+    if (x > 15)
+      x = 15;
+    if (z > 15)
+      z = 15;
+
     return getTopBlock(x, z);
   }
 }
