@@ -27,7 +27,7 @@ class Chunk
 
       for (int z = 0; z < numBlocks; z++)
       {
-        int y = (int)map(noise(noiseX, noiseZ), 0, 1, 50, 200);
+        int y = (int)map(noise(noiseX, noiseZ) * noise(noiseX + 50, noiseZ + 50), 0, 1, 50, 200);
         int blockY = y * blockSize;
 
         blocks[y][x][z] = new Block(new PVector(blockX, blockY, blockZ), x, y, z);
@@ -83,6 +83,47 @@ class Chunk
             block.render();
         }
       }
+    }
+    
+    checkHitScan();
+  }
+
+  void checkHitScan()
+  {
+    ArrayList<Block> blocksHit = new ArrayList<Block>();
+    for (int y = 0; y < blocks.length; y++)
+    {
+      for (int x = 0; x < blocks[y].length; x++)
+      {
+        for (int z = 0; z < blocks[y][x].length; z++)
+        {
+          Block block = blocks[y][x][z];
+
+          if (block != null && block.hitScan(new PVector(player.pos.x,player.pos.y,player.pos.z), new PVector(player.view.x,player.view.y,player.view.z)))
+            blocksHit.add(block);
+        }
+      }
+    }
+
+    float closest = Float.POSITIVE_INFINITY;
+    int num = -1;
+
+    for (int i = 0; i < blocksHit.size(); i++)
+    {
+      Block block = blocksHit.get(i);
+
+      float dist = dist(player.pos.x, player.pos.y, player.pos.z, block.pos.x, block.pos.y, block.pos.z);
+
+      if (dist < closest)
+        num = i;
+    }
+
+    if (num != -1)
+    {
+      //Block toRem = blocksHit.get(num);
+      //blocks[toRem.y][toRem.x][toRem.z] = null;
+      
+      blocksHit.get(num).lookingAt = true;
     }
   }
 

@@ -11,7 +11,7 @@ int blockSize = 50;
 int numBlocks = 16;
 int chunkSize = numBlocks * blockSize;
 float noiseScl = .01;
-PShape stone, dirt;
+PShape stone, dirt, sand;
 
 void setup()
 {
@@ -32,6 +32,10 @@ void setup()
   dirt = createShape(BOX, blockSize);
   dirt.translate(blockSize/2, blockSize/2, 0);
   dirt.setTexture(loadImage("dirt.jpg"));
+  
+  sand = createShape(BOX, blockSize);
+  sand.translate(blockSize/2, blockSize/2, 0);
+  sand.setTexture(loadImage("sand.jpg"));
 
 
   window = (GLWindow)surface.getNative();
@@ -49,7 +53,7 @@ void draw()
 {
   background(#16819D);
   lights();
-  directionalLight(200, 200, 190, .75, -1, 0);
+  directionalLight(200, 200, 190, .75, -1, .75);
 
   player.render();
   world.render();
