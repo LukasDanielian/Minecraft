@@ -12,7 +12,7 @@ int blockSize = 50;
 int numBlocks = 16;
 int chunkSize = numBlocks * blockSize;
 float noiseScl = .01;
-PImage stone, dirt, sand,grassTop,grassSide;
+PImage stone, dirt, sand,grassTop,grassSide,diamond;
 int[] xDisp = {-1,1,0,0,0,0};
 int[] yDisp = {0,0,0,0,-1,1};
 int[] zDisp = {0,0,-1,1,0,0};
@@ -38,6 +38,8 @@ void setup()
   grassTop.resize(blockSize,0);
   grassSide = loadImage("grassSide.jpg");
   grassSide.resize(blockSize,0);
+  diamond = loadImage("diamond.jpg");
+  //diamond.resize(blockSize,0);
   
 
 

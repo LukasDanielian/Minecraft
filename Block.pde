@@ -17,7 +17,12 @@ class Block implements Comparable<Block>
     float noise = noise(pos.x/2000, pos.z/2000);
 
     if (noise > .66)
+    {
       texture = stone;
+      
+      if(noise > .94)
+        texture = diamond;
+    }
     else if (noise > .33)
       texture = dirt;
     else

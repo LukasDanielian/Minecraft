@@ -27,7 +27,7 @@ class Chunk
 
       for (int z = 0; z < numBlocks; z++)
       {
-        int y = (int)map(noise(noiseX, noiseZ) * noise(-noiseX, -noiseZ), 0, 1, 50, 200);
+        int y = (int)map(noise(noiseX, noiseZ) * noise(-noiseX, -noiseZ), 0, 1, 100, 200);
         int blockY = y * blockSize;
 
         blocks[y][x][z] = new Block(new PVector(blockX, blockY, blockZ), x, y, z, this);
