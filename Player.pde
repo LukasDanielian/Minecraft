@@ -11,7 +11,7 @@ class Player
   {
     pos = new PVector(0, 0, 0);
     vel = new PVector(0, 0, 0);
-    speed = .045;
+    speed = 10;
     yaw = HALF_PI;
   }
 
@@ -34,7 +34,7 @@ class Player
   //updates player view
   void updateCamera()
   {
-    view = new PVector(cos(yaw) * cos(pitch), -sin(pitch), sin(yaw) * cos(pitch)).mult(-width * .1);
+    view = new PVector(cos(yaw) * cos(pitch), -sin(pitch), sin(yaw) * cos(pitch)).mult(-1);
     perspective(PI/2.5, float(width)/height, .01, width * width);
     camera(pos.x, pos.y, pos.z, pos.x + view.x, pos.y + view.y, pos.z + view.z, 0, 1, 0);
   }

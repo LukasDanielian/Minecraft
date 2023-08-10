@@ -1,4 +1,5 @@
 import com.jogamp.newt.opengl.GLWindow;
+import java.util.*;
 
 GLWindow window;
 boolean[] keys = new boolean[256];
@@ -12,9 +13,6 @@ int numBlocks = 16;
 int chunkSize = numBlocks * blockSize;
 float noiseScl = .01;
 PShape stone, dirt, sand;
-int[] xDisp = {-1,1,0,0,0,0};
-int[] yDisp = {0,0,0,0,-1,1};
-int[] zDisp = {0,0,-1,1,0,0};
 
 void setup()
 {

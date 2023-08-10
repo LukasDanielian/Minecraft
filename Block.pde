@@ -31,8 +31,7 @@ class Block implements Comparable<Block>
     {
       fill(255);
       box(blockSize);
-    }
-    else
+    } else
       shape(cube);
     pop();
 

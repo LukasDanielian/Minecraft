@@ -48,11 +48,3 @@ boolean keyDown(int key)
 {
   return keys[key];
 }
-
-void mousePressed()
-{
-  if(player.lookingAt != null)
-  {
-    player.lookingAt.chunk.remove(player.lookingAt);
-  }
-}

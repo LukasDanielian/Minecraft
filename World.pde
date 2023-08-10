@@ -1,6 +1,8 @@
 class World
 {
   HashMap<String, Chunk> chunks;
+  //int[] DEPTH_DISP = {-1, -1, -1, 0, 0, 0, 1, 1, 1,0,-1,-2,-2,-2,-2,-2,-1,0,1,2,2,2,2,2,1};
+  //int[] HORIZ_DISP = {-1, 0, 1, -1, 0, 1, -1, 0, 1,-2,-2,-2,-1,0,1,2,2,2,2,2,1,0,-1,-2,-2};
   int[] DEPTH_DISP = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
   int[] HORIZ_DISP = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
 
@@ -13,39 +15,39 @@ class World
   void render()
   {
     ArrayList<Block> blocks = new ArrayList<Block>();
+    
     for (int i = 0; i < DEPTH_DISP.length; i++)
     {
-       Chunk chunk = chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i]));
-       chunk.render();
-       
-       Block block = chunk.checkHitScan();
-       if(block != null)
-         blocks.add(block);
+      Chunk chunk = chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i]));
+      chunk.render();
+      
+      Block block = chunk.checkHitScan();
+      if (block != null)
+        blocks.add(block);
     }
-    
+
     float lowestDist = Float.POSITIVE_INFINITY;
     int num = -1;
-    
-    for(int i = 0; i < blocks.size(); i++)
+
+    for (int i = 0; i < blocks.size(); i++)
     {
       Block block = blocks.get(i);
-      
-      float dist = dist(player.pos.x,player.pos.y,player.pos.z,block.pos.x,block.pos.y,block.pos.z);
-      
-      if(dist < lowestDist)
+
+      float dist = dist(player.pos.x, player.pos.y, player.pos.z, block.pos.x, block.pos.y, block.pos.z);
+
+      if (dist < lowestDist)
       {
         num = i;
         lowestDist = dist;
       }
     }
-    
-    if(num != -1)
+
+    if (num != -1)
     {
       Block block = blocks.get(num);
       block.lookingAt = true;
       player.lookingAt = block;
-    }
-    else
+    } else
     {
       player.lookingAt = null;
     }
@@ -66,7 +68,7 @@ class World
       }
     }
   }
-  
+
   void updateBlocksUnder()
   {
     for (int i = 0; i < DEPTH_DISP.length; i++)

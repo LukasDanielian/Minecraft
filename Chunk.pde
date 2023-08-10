@@ -27,10 +27,10 @@ class Chunk
 
       for (int z = 0; z < numBlocks; z++)
       {
-        int y = (int)map(noise(noiseX, noiseZ) * noise(noiseX + 50, noiseZ + 50), 0, 1, 50, 200);
+        int y = (int)map(noise(noiseX, noiseZ) * noise(-noiseX, -noiseZ), 0, 1, 50, 200);
         int blockY = y * blockSize;
 
-        blocks[y][x][z] = new Block(new PVector(blockX, blockY, blockZ), x, y, z,this);
+        blocks[y][x][z] = new Block(new PVector(blockX, blockY, blockZ), x, y, z, this);
         blockZ += blockSize;
         noiseZ += noiseScl;
       }
@@ -63,38 +63,9 @@ class Chunk
         }
 
         for (int i = 1; i < largestGap; i++)
-          blocks[block.y+i][x][z] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), x, block.y + i, z,this);
+          blocks[block.y+i][x][z] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), x, block.y + i, z, this);
       }
     }
-  }
-  
-  void remove(Block block)
-  {
-    Block[] neighbors = getAllNeighbors(block);
-    
-    for(int i = 0; i < neighbors.length; i++) 
-    {
-      Block nBlock = neighbors[i];
-      
-      if(nBlock == null && (getTopBlock(block.x + xDisp[i], block.z + zDisp[i]) == null || block.y + yDisp[i] > getTopBlock(block.x + xDisp[i], block.z + zDisp[i]).y))
-      {
-        blocks[block.y + yDisp[i]][block.x + xDisp[i]][block.z + zDisp[i]] = new Block(new PVector(block.pos.x + xDisp[i] * blockSize,block.pos.y + yDisp[i] * blockSize,block.pos.z + zDisp[i] * blockSize),block.x + xDisp[i],block.y + yDisp[i],block.z + zDisp[i],this);
-      }
-    }
-    
-    blocks[block.y][block.x][block.z] = null;
-  }
-  
-  Block[] getAllNeighbors(Block block)
-  {
-    Block[] neighbors = new Block[6];
-    
-    for(int i = 0; i < xDisp.length; i++)
-    {
-      neighbors[i] = blocks[block.y + yDisp[i]][block.x + xDisp[i]][block.z + zDisp[i]];
-    }
-    
-    return neighbors;
   }
 
   //renders every block in chunk
@@ -126,7 +97,7 @@ class Chunk
         {
           Block block = blocks[y][x][z];
 
-          if (block != null && block.hitScan(new PVector(player.pos.x,player.pos.y,player.pos.z), new PVector(player.view.x,player.view.y,player.view.z)))
+          if (block != null && block.hitScan(new PVector(player.pos.x, player.pos.y, player.pos.z), new PVector(player.view.x, player.view.y, player.view.z)))
             blocksHit.add(block);
         }
       }
@@ -148,9 +119,9 @@ class Chunk
       }
     }
 
-    if (num != -1) 
+    if (num != -1)
       return blocksHit.get(num);
-    
+
     return null;
   }
 
