@@ -73,6 +73,9 @@ class World
   {
     for (int i = 0; i < DEPTH_DISP.length; i++)
       chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i])).updateBlocksUnder();
+      
+    for(int i = 0; i < DEPTH_DISP.length; i++)
+      chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i])).updateFaces();
   }
 
   //returns current chunk of player

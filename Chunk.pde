@@ -68,6 +68,61 @@ class Chunk
     }
   }
 
+  void updateFaces()
+  {
+    for (int y = 0; y < blocks.length; y++)
+    {
+      for (int x = 0; x < blocks[y].length; x++)
+      {
+        for (int z = 0; z < blocks[y][x].length; z++)
+        {
+          Block block = blocks[y][x][z];
+
+          if (block != null)
+            block.renderSide = getAllNeighbors(block);
+        }
+      }
+    }
+  }
+
+  boolean[] getAllNeighbors(Block block)
+  {
+    boolean[] neighbors = new boolean[6];
+
+    for (int i = 0; i < xDisp.length; i++)
+    {
+      Chunk chunk = this;
+      int bx = block.x + xDisp[i];
+      int by = block.y + yDisp[i];
+      int bz = block.z + zDisp[i];
+
+      if (bx < 0)
+      {
+        chunk = world.chunks.get(world.cordString((x/chunkSize)-1, z/chunkSize));
+        bx = 15;
+      } else if (bx > 15)
+      {
+        chunk = world.chunks.get(world.cordString((x/chunkSize)+1, z/chunkSize));
+        bx = 0;
+      } else if (bz < 0)
+      {
+        chunk = world.chunks.get(world.cordString(x/chunkSize, (z/chunkSize) - 1));
+        bz = 15;
+      } else if (bz > 15)
+      {
+        chunk = world.chunks.get(world.cordString(x/chunkSize, (z/chunkSize) + 1));
+        bz = 0;
+      }
+
+      if (chunk == null)
+        neighbors[i] = false;
+      else if(chunk.blocks[by][bx][bz] == null && by < chunk.getTopBlock(bx,bz).y)
+        neighbors[i] = true;
+    }
+
+    return neighbors;
+  }
+
   //renders every block in chunk
   void render()
   {

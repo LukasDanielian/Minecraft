@@ -2,9 +2,10 @@ class Block implements Comparable<Block>
 {
   PVector pos;
   int x, y, z;
-  PShape cube;
+  PImage texture;
   boolean lookingAt;
   Chunk chunk;
+  boolean[] renderSide = {true,true,true,true,true,false};
 
   Block(PVector pos, int x, int y, int z, Chunk chunk)
   {
@@ -13,14 +14,14 @@ class Block implements Comparable<Block>
     this.y = y;
     this.z = z;
     this.chunk = chunk;
-    float noise = noise(pos.x/1000, pos.z/1000);
+    float noise = noise(pos.x/2000, pos.z/2000);
 
     if (noise > .66)
-      cube = stone;
+      texture = stone;
     else if (noise > .33)
-      cube = dirt;
+      texture = dirt;
     else
-      cube = sand;
+      texture = sand;
   }
 
   void render()
@@ -32,7 +33,32 @@ class Block implements Comparable<Block>
       fill(255);
       box(blockSize);
     } else
-      shape(cube);
+    {
+      for (int i = 0; i < xDisp.length; i++)
+      {
+        if (renderSide[i])
+        {
+          push();
+          translate(xDisp[i] * blockSize/2, yDisp[i] * blockSize/2, zDisp[i] * blockSize/2);
+          if (xDisp[i] != 0)
+            rotateY(HALF_PI);
+          else if (yDisp[i] != 0)
+            rotateX(HALF_PI);
+            
+          if(texture.equals(dirt))
+          {
+            if(xDisp[i] != 0 || zDisp[i] != 0)
+              image(grassSide, 0, 0);
+            else if(yDisp[i] < 0)
+              image(grassTop,0,0);
+          }
+          
+          else
+            image(texture,0,0);
+          pop();
+        }
+      }
+    }
     pop();
 
     lookingAt = false;

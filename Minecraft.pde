@@ -12,7 +12,10 @@ int blockSize = 50;
 int numBlocks = 16;
 int chunkSize = numBlocks * blockSize;
 float noiseScl = .01;
-PShape stone, dirt, sand;
+PImage stone, dirt, sand,grassTop,grassSide;
+int[] xDisp = {-1,1,0,0,0,0};
+int[] yDisp = {0,0,0,0,-1,1};
+int[] zDisp = {0,0,-1,1,0,0};
 
 void setup()
 {
@@ -25,18 +28,17 @@ void setup()
   textSize(128);
   noStroke();
 
-  stone = createShape(BOX, blockSize);
-  stone.translate(blockSize/2, blockSize/2, 0);
-  stone.setTexture(loadImage("stone.jpg"));
-
-
-  dirt = createShape(BOX, blockSize);
-  dirt.translate(blockSize/2, blockSize/2, 0);
-  dirt.setTexture(loadImage("dirt.jpg"));
+  stone = loadImage("stone.jpg");
+  stone.resize(blockSize,0);
+  dirt = loadImage("dirt.jpg");
+  dirt.resize(blockSize,0);
+  sand = loadImage("sand.jpg");
+  sand.resize(blockSize,0);
+  grassTop = loadImage("grassTop.jpg");
+  grassTop.resize(blockSize,0);
+  grassSide = loadImage("grassSide.jpg");
+  grassSide.resize(blockSize,0);
   
-  sand = createShape(BOX, blockSize);
-  sand.translate(blockSize/2, blockSize/2, 0);
-  sand.setTexture(loadImage("sand.jpg"));
 
 
   window = (GLWindow)surface.getNative();
@@ -54,7 +56,7 @@ void draw()
 {
   background(#16819D);
   lights();
-  directionalLight(200, 200, 200, .75, -1, .75);
+  directionalLight(200, 200, 200, .75, 1, .75);
 
   player.render();
   world.render();
