@@ -12,10 +12,10 @@ int blockSize = 50;
 int numBlocks = 16;
 int chunkSize = numBlocks * blockSize;
 float noiseScl = .01;
-PImage stone, dirt, sand,grassTop,grassSide,diamond;
-int[] xDisp = {-1,1,0,0,0,0};
-int[] yDisp = {0,0,0,0,-1,1};
-int[] zDisp = {0,0,-1,1,0,0};
+PImage stone, dirt, sand, grassTop, grassSide, diamond, bedrock;
+int[] xDisp = {-1, 1, 0, 0, 0, 0};
+int[] yDisp = {0, 0, 0, 0, -1, 1};
+int[] zDisp = {0, 0, -1, 1, 0, 0};
 HashSet<String> minedBlocks = new HashSet<String>();
 
 void setup()
@@ -30,18 +30,20 @@ void setup()
   noStroke();
 
   stone = loadImage("stone.jpg");
-  stone.resize(blockSize,0);
+  stone.resize(blockSize, 0);
   dirt = loadImage("dirt.jpg");
-  dirt.resize(blockSize,0);
+  dirt.resize(blockSize, 0);
   sand = loadImage("sand.jpg");
-  sand.resize(blockSize,0);
+  sand.resize(blockSize, 0);
   grassTop = loadImage("grassTop.jpg");
-  grassTop.resize(blockSize,0);
+  grassTop.resize(blockSize, 0);
   grassSide = loadImage("grassSide.jpg");
-  grassSide.resize(blockSize,0);
+  grassSide.resize(blockSize, 0);
   diamond = loadImage("diamond.jpg");
-  diamond.resize(blockSize,0);
-  
+  diamond.resize(blockSize, 0);
+  bedrock = loadImage("bedrock.jpg");;
+  bedrock.resize(blockSize,0);
+
 
 
   window = (GLWindow)surface.getNative();
@@ -51,7 +53,7 @@ void setup()
   player = new Player();
   world = new World();
   world.updateChunks();
-  world.updateBlocksUnder();
+  world.updateMesh();
   player.setCurrentBlock();
 }
 

@@ -3,6 +3,7 @@ class Chunk
   int x, z;
   float noiseX, noiseZ;
   Block[][][] blocks;
+  int[][] floorLevel = new int[16][16];
   //y x z
 
   Chunk(int x, int z)
@@ -29,8 +30,8 @@ class Chunk
       {
         int y = (int)map(noise(noiseX, noiseZ) * noise(-noiseX, -noiseZ), 0, 1, 100, 200);
         int blockY = y * blockSize;
-
-        blocks[y][x][z] = new Block(new PVector(blockX, blockY, blockZ), x, y, z, this,false);
+        floorLevel[x][z] = y;
+        blocks[y][x][z] = new Block(new PVector(blockX, blockY, blockZ), x, y, z, this, false);
         blockZ += blockSize;
         noiseZ += noiseScl;
       }
@@ -64,8 +65,8 @@ class Chunk
 
         for (int i = 1; i < largestGap; i++)
         {
-          if(blocks[block.y+i][x][z] == null && !minedBlocks.contains(this.x/chunkSize + "x" + this.z/chunkSize + "x" + x + "x" + (block.y+i) + "x" + z))
-            blocks[block.y+i][x][z] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), x, block.y + i, z, this,true);
+          if (blocks[block.y+i][x][z] == null && !minedBlocks.contains(this.x/chunkSize + "x" + this.z/chunkSize + "x" + x + "x" + (block.y+i) + "x" + z))
+            blocks[block.y+i][x][z] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), x, block.y + i, z, this, true);
         }
       }
     }
@@ -117,12 +118,12 @@ class Chunk
         bz = 0;
       }
 
-      if((chunk != null && chunk.blocks[by][bx][bz] == null && by < chunk.getTopBlock(bx,bz).y) || (chunk != null && minedBlocks.contains(chunk.x/chunkSize + "x" + chunk.z/chunkSize + "x" + bx + "x" + by + "x" + bz)))
+      if ((chunk != null && chunk.blocks[by][bx][bz] == null && by < chunk.getTopBlock(bx, bz).y) || (chunk != null && minedBlocks.contains(chunk.x/chunkSize + "x" + chunk.z/chunkSize + "x" + bx + "x" + by + "x" + bz)))
         block.renderSide[i] = true;
-      if(chunk != null)
+      if (chunk != null)
       {
-          if(chunk.blocks[by][bx][bz] == null && by > chunk.getTopBlock(bx,bz).y)
-            neighbors[i] = new Block(new PVector(block.pos.x + xDisp[i] * blockSize,block.pos.y + yDisp[i] * blockSize,block.pos.z + zDisp[i] * blockSize),bx,by,bz,this,true);
+        if (chunk.blocks[by][bx][bz] == null && by > chunk.getTopBlock(bx, bz).y)
+          neighbors[i] = new Block(new PVector(block.pos.x + xDisp[i] * blockSize, block.pos.y + yDisp[i] * blockSize, block.pos.z + zDisp[i] * blockSize), bx, by, bz, chunk, true);
       }
     }
 
@@ -140,7 +141,7 @@ class Chunk
         {
           Block block = blocks[y][x][z];
 
-          if (block != null) 
+          if (block != null)
             block.render();
         }
       }
@@ -249,7 +250,7 @@ class Chunk
   //Returns floor block at x and z pos
   Block getTopBlock(int x, int z)
   {
-    for (int y = 0; y < 256; y++)
+    for (int y = floorLevel[x][z]; y < 256; y++)
     {
       if (blocks[y][x][z] != null)
         return blocks[y][x][z];

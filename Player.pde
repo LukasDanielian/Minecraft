@@ -129,45 +129,55 @@ class Player
   {
     if (currBlock != null)
     {
+      //left block
       if (pos.x < currBlock.pos.x - blockSize/2 + 5)
       {
-        Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y, currBlock.pos.z), new PVector(-1, 0, 0), blockSize * 1.5);
-        Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize, currBlock.pos.z), new PVector(-1, 0, 0), blockSize * 1.5);
+        Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y-15, currBlock.pos.z), new PVector(-1, 0, 0), blockSize + 15);
+        Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize+5, currBlock.pos.z), new PVector(-1, 0, 0), blockSize + 15);
 
         if (bottom != null && top == null)
           jump();
 
-        if (bottom != null)
+        if (bottom != null || top != null)
           pos.x = currBlock.pos.x - blockSize/2 + 5;
-      } if (pos.x > currBlock.pos.x + blockSize/2 - 5)
+      } 
+      
+      //right block
+      if (pos.x > currBlock.pos.x + blockSize/2 - 5)
       {
-        Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y, currBlock.pos.z), new PVector(1, 0, 0), blockSize * 1.5);
-        Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize, currBlock.pos.z), new PVector(1, 0, 0), blockSize * 1.5);
+        Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y-15, currBlock.pos.z), new PVector(1, 0, 0), blockSize + 15);
+        Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize+5, currBlock.pos.z), new PVector(1, 0, 0), blockSize + 15);
 
         if (bottom != null && top == null)
           jump();
 
-        if (bottom != null)
+        if (bottom != null || top != null)
           pos.x = currBlock.pos.x + blockSize/2 - 5;
-      } if (pos.z < currBlock.pos.z - blockSize/2 + 5)
+      } 
+      
+      //front block
+      if (pos.z < currBlock.pos.z - blockSize/2 + 5)
       {
-        Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y, currBlock.pos.z), new PVector(0, 0, -1), blockSize * 1.5);
-        Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize, currBlock.pos.z), new PVector(0, 0, -1), blockSize * 1.5);
+        Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y-15, currBlock.pos.z), new PVector(0, 0, -1), blockSize + 15);
+        Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize+5, currBlock.pos.z), new PVector(0, 0, -1), blockSize + 15);
 
         if (bottom != null && top == null)
           jump();
 
-        if (bottom != null)
+        if (bottom != null || top != null)
           pos.z = currBlock.pos.z - blockSize/2 + 5;
-      } if (pos.z > currBlock.pos.z + blockSize/2 - 5)
+      } 
+      
+      //back block
+      if (pos.z > currBlock.pos.z + blockSize/2 - 5)
       {
-        Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y, currBlock.pos.z), new PVector(0, 0, 1), blockSize * 1.5);
-        Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize, currBlock.pos.z), new PVector(0, 0, 1), blockSize * 1.5);
+        Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y-15, currBlock.pos.z), new PVector(0, 0, 1), blockSize + 15);
+        Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize+5, currBlock.pos.z), new PVector(0, 0, 1), blockSize + 15);
 
         if (bottom != null && top == null)
           jump();
 
-        if (bottom != null)
+        if (bottom != null || top != null)
           pos.z = currBlock.pos.z + blockSize/2 - 5;
       }
     }
@@ -186,7 +196,7 @@ class Player
         return;
 
       world.updateChunks();
-      world.updateBlocksUnder();
+      world.updateMesh();
       currChunk = world.getCurrentChunk();
     }
   }
@@ -210,7 +220,10 @@ class Player
 
   void jump()
   {
-    if (!jumping)
+    if(jumping)
+      return;
+
+    if(world.checkHitScan(new PVector(currBlock.pos.x,currBlock.pos.y-blockSize,currBlock.pos.z),new PVector(0,-1,0),(blockSize * 2) - 5) == null)
     {
       jumping = true;
       vel.y = -10;

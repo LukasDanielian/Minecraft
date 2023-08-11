@@ -18,7 +18,7 @@ class World
       chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i])).render();
 
     Block lookingAt = checkHitScan(player.pos.copy(),player.view.copy(),chunkSize);
-    player.currBlock = checkHitScan(new PVector(player.pos.x,player.pos.y+blockSize*2,player.pos.z),new PVector(0,1,0),blockSize * 265);
+    player.currBlock = checkHitScan(new PVector(player.pos.x,player.pos.y,player.pos.z),new PVector(0,1,0),blockSize * 265);
     
     if(lookingAt != null)
     {
@@ -82,7 +82,7 @@ class World
     }
   }
 
-  void updateBlocksUnder()
+  void updateMesh()
   {
     for (int i = 0; i < DEPTH_DISP.length; i++)
       chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i])).updateBlocksUnder();

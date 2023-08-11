@@ -8,7 +8,7 @@ class Block implements Comparable<Block>
   boolean[] renderSide = new boolean[6];
   boolean underground;
 
-  Block(PVector pos, int x, int y, int z, Chunk chunk,boolean underground)
+  Block(PVector pos, int x, int y, int z, Chunk chunk, boolean underground)
   {
     this.pos = pos;
     this.x = x;
@@ -18,17 +18,30 @@ class Block implements Comparable<Block>
     this.underground = underground;
     float noise = noise(pos.x/2000, pos.z/2000);
 
-    if (noise > .66)
+
+    //underground
+    if (y > chunk.floorLevel[x][z] + 5)
     {
-      texture = stone;
-      
-      if(noise > .94)
-        texture = diamond;
+      if (y > 256-3)
+        texture = bedrock;
+
+      else
+      {
+        texture = stone;
+
+        if (noise > .5)
+          texture = diamond;
+      }
     }
-    else if (noise > .33)
-      texture = dirt;
+
+    //above ground
     else
-      texture = sand;
+    {
+      if (noise > .25)
+        texture = dirt;
+      else
+        texture = sand;
+    }
   }
 
   void render()
@@ -37,35 +50,33 @@ class Block implements Comparable<Block>
     translate(pos.x, pos.y, pos.z);
     if (lookingAt)
     {
-      fill(255);
+      noFill();
+      stroke(0);
+      strokeWeight(1);
       box(blockSize);
-    } else
+    }
+    for (int i = 0; i < xDisp.length; i++)
     {
-      for (int i = 0; i < xDisp.length; i++)
+      if (renderSide[i])
       {
-        if (renderSide[i])
+        push();
+        translate(xDisp[i] * blockSize/2, yDisp[i] * blockSize/2, zDisp[i] * blockSize/2);
+        if (xDisp[i] != 0)
+          rotateY(HALF_PI);
+        else if (yDisp[i] != 0)
+          rotateX(HALF_PI);
+
+        if (texture.equals(dirt) && !underground)
         {
-          push();
-          translate(xDisp[i] * blockSize/2, yDisp[i] * blockSize/2, zDisp[i] * blockSize/2);
-          if (xDisp[i] != 0)
-            rotateY(HALF_PI);
-          else if (yDisp[i] != 0)
-            rotateX(HALF_PI);
-            
-          if(texture.equals(dirt) && !underground)
-          {
-            if(xDisp[i] != 0 || zDisp[i] != 0)
-              image(grassSide, 0, 0);
-            else if(yDisp[i] < 0)
-              image(grassTop,0,0);
-            else
-              image(dirt,0,0);
-          }
-          
+          if (xDisp[i] != 0 || zDisp[i] != 0)
+            image(grassSide, 0, 0);
+          else if (yDisp[i] < 0)
+            image(grassTop, 0, 0);
           else
-            image(texture,0,0);
-          pop();
-        }
+            image(dirt, 0, 0);
+        } else
+          image(texture, 0, 0);
+        pop();
       }
     }
     pop();
@@ -85,6 +96,9 @@ class Block implements Comparable<Block>
     PVector maxBounds = new PVector(pos.x + blockSize / 2, pos.y + blockSize / 2, pos.z + blockSize / 2);
     PVector invRayDirection = new PVector(1.0 / rayDirection.x, 1.0 / rayDirection.y, 1.0 / rayDirection.z);
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
+
+    if (PVector.dot(rayDirection, PVector.sub(pos, rayOrigin)) < 0)
+      return false;
 
     if (invRayDirection.x >= 0)
     {

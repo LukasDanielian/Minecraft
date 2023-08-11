@@ -53,7 +53,7 @@ void mousePressed()
 {
   Block block = player.lookingAt;
 
-  if (block != null)
+  if (block != null && !block.texture.equals(bedrock))
   {
     minedBlocks.add(block.chunk.x/chunkSize + "x" + block.chunk.z/chunkSize + "x" + block.x + "x" + block.y + "x" + block.z);
     Block[] neighbors = block.chunk.getAllNeighbors(block);
@@ -67,6 +67,6 @@ void mousePressed()
     }
 
     block.chunk.blocks[block.y][block.x][block.z] = null;
-    world.updateBlocksUnder();
+    world.updateMesh();
   }
 }
