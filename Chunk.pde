@@ -30,7 +30,7 @@ class Chunk
         int y = (int)map(noise(noiseX, noiseZ) * noise(-noiseX, -noiseZ), 0, 1, 100, 200);
         int blockY = y * blockSize;
 
-        blocks[y][x][z] = new Block(new PVector(blockX, blockY, blockZ), x, y, z, this);
+        blocks[y][x][z] = new Block(new PVector(blockX, blockY, blockZ), x, y, z, this,false);
         blockZ += blockSize;
         noiseZ += noiseScl;
       }
@@ -63,7 +63,10 @@ class Chunk
         }
 
         for (int i = 1; i < largestGap; i++)
-          blocks[block.y+i][x][z] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), x, block.y + i, z, this);
+        {
+          if(blocks[block.y+i][x][z] == null && !minedBlocks.contains(this.x/chunkSize + "x" + this.z/chunkSize + "x" + x + "x" + (block.y+i) + "x" + z))
+            blocks[block.y+i][x][z] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), x, block.y + i, z, this,true);
+        }
       }
     }
   }
@@ -79,15 +82,15 @@ class Chunk
           Block block = blocks[y][x][z];
 
           if (block != null)
-            block.renderSide = getAllNeighbors(block);
+            getAllNeighbors(block);
         }
       }
     }
   }
 
-  boolean[] getAllNeighbors(Block block)
+  Block[] getAllNeighbors(Block block)
   {
-    boolean[] neighbors = new boolean[6];
+    Block[] neighbors = new Block[6];
 
     for (int i = 0; i < xDisp.length; i++)
     {
@@ -114,10 +117,13 @@ class Chunk
         bz = 0;
       }
 
-      if (chunk == null)
-        neighbors[i] = false;
-      else if(chunk.blocks[by][bx][bz] == null && by < chunk.getTopBlock(bx,bz).y)
-        neighbors[i] = true;
+      if((chunk != null && chunk.blocks[by][bx][bz] == null && by < chunk.getTopBlock(bx,bz).y) || (chunk != null && minedBlocks.contains(chunk.x/chunkSize + "x" + chunk.z/chunkSize + "x" + bx + "x" + by + "x" + bz)))
+        block.renderSide[i] = true;
+      if(chunk != null)
+      {
+          if(chunk.blocks[by][bx][bz] == null && by > chunk.getTopBlock(bx,bz).y)
+            neighbors[i] = new Block(new PVector(block.pos.x + xDisp[i] * blockSize,block.pos.y + yDisp[i] * blockSize,block.pos.z + zDisp[i] * blockSize),bx,by,bz,this,true);
+      }
     }
 
     return neighbors;
@@ -134,14 +140,14 @@ class Chunk
         {
           Block block = blocks[y][x][z];
 
-          if (block != null)
+          if (block != null) 
             block.render();
         }
       }
     }
   }
 
-  Block checkHitScan()
+  Block checkHitScan(PVector center, PVector looking)
   {
     ArrayList<Block> blocksHit = new ArrayList<Block>();
     for (int y = 0; y < blocks.length; y++)
@@ -152,7 +158,7 @@ class Chunk
         {
           Block block = blocks[y][x][z];
 
-          if (block != null && block.hitScan(new PVector(player.pos.x, player.pos.y, player.pos.z), new PVector(player.view.x, player.view.y, player.view.z)))
+          if (block != null && block.hitScan(center, looking))
             blocksHit.add(block);
         }
       }
@@ -250,19 +256,5 @@ class Chunk
     }
 
     return null;
-  }
-
-  //Returns block that player is standing on
-  Block getCurrentBlock()
-  {
-    int x = (int)map(player.pos.x, this.x - chunkSize/2, this.x + chunkSize/2, 0, 16);
-    int z = (int)map(player.pos.z, this.z - chunkSize/2, this.z + chunkSize/2, 0, 16);
-
-    if (x > 15)
-      x = 15;
-    if (z > 15)
-      z = 15;
-
-    return getTopBlock(x, z);
   }
 }

@@ -5,15 +5,17 @@ class Block implements Comparable<Block>
   PImage texture;
   boolean lookingAt;
   Chunk chunk;
-  boolean[] renderSide = {true,true,true,true,true,false};
+  boolean[] renderSide = new boolean[6];
+  boolean underground;
 
-  Block(PVector pos, int x, int y, int z, Chunk chunk)
+  Block(PVector pos, int x, int y, int z, Chunk chunk,boolean underground)
   {
     this.pos = pos;
     this.x = x;
     this.y = y;
     this.z = z;
     this.chunk = chunk;
+    this.underground = underground;
     float noise = noise(pos.x/2000, pos.z/2000);
 
     if (noise > .66)
@@ -50,12 +52,14 @@ class Block implements Comparable<Block>
           else if (yDisp[i] != 0)
             rotateX(HALF_PI);
             
-          if(texture.equals(dirt))
+          if(texture.equals(dirt) && !underground)
           {
             if(xDisp[i] != 0 || zDisp[i] != 0)
               image(grassSide, 0, 0);
             else if(yDisp[i] < 0)
               image(grassTop,0,0);
+            else
+              image(dirt,0,0);
           }
           
           else

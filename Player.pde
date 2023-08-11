@@ -28,7 +28,7 @@ class Player
   void setCurrentBlock()
   {
     currChunk = world.getCurrentChunk();
-    currBlock = currChunk.getCurrentBlock();
+    player.currBlock = world.checkHitScan(player.pos.copy(), new PVector(0, 1, 0), blockSize*256);
   }
 
   //updates player view
@@ -120,61 +120,56 @@ class Player
 
       //Jump
       if (keyDown(' '))
-      {
-        if (!jumping)
-        {
-          jumping = true;
-          vel.y = -10;
-        }
-      }
+        jump();
     }
   }
 
   //Keeps player in map
   void checkBounds()
   {
-    Block[] neighbors = currChunk.getNeighbors(currBlock);
-    
     if (currBlock != null)
     {
-      if (pos.x < currBlock.pos.x - blockSize/2 + 5 && currBlock.compareTo(neighbors[0]) < 0 && pos.y + 100 > neighbors[0].pos.y)
+      if (pos.x < currBlock.pos.x - blockSize/2 + 5)
       {
-        if (!jumping)
-        {
-          jumping = true;
-          vel.y = -10;
-        }
-        pos.x = currBlock.pos.x - blockSize/2 + 5;
-      }
-      if (pos.x > currBlock.pos.x + blockSize/2 - 5 && currBlock.compareTo(neighbors[1]) < 0 && pos.y + 100 > neighbors[1].pos.y)
+        Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y, currBlock.pos.z), new PVector(-1, 0, 0), blockSize * 1.5);
+        Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize, currBlock.pos.z), new PVector(-1, 0, 0), blockSize * 1.5);
+
+        if (bottom != null && top == null)
+          jump();
+
+        if (bottom != null)
+          pos.x = currBlock.pos.x - blockSize/2 + 5;
+      } if (pos.x > currBlock.pos.x + blockSize/2 - 5)
       {
-        if (!jumping)
-        {
-          jumping = true;
-          vel.y = -10;
-        }
-        pos.x = currBlock.pos.x + blockSize/2 - 5;
-      }
-      if (pos.z < currBlock.pos.z - blockSize/2 + 5 && currBlock.compareTo(neighbors[2]) < 0 && pos.y + 100 > neighbors[2].pos.y)
+        Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y, currBlock.pos.z), new PVector(1, 0, 0), blockSize * 1.5);
+        Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize, currBlock.pos.z), new PVector(1, 0, 0), blockSize * 1.5);
+
+        if (bottom != null && top == null)
+          jump();
+
+        if (bottom != null)
+          pos.x = currBlock.pos.x + blockSize/2 - 5;
+      } if (pos.z < currBlock.pos.z - blockSize/2 + 5)
       {
-        if (!jumping)
-        {
-          jumping = true;
-          vel.y = -10;
-        }
-        pos.z = currBlock.pos.z - blockSize/2 + 5;
-      }
-      if (pos.z > currBlock.pos.z + blockSize/2 - 5 && currBlock.compareTo(neighbors[3]) < 0 && pos.y + 100 > neighbors[3].pos.y)
+        Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y, currBlock.pos.z), new PVector(0, 0, -1), blockSize * 1.5);
+        Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize, currBlock.pos.z), new PVector(0, 0, -1), blockSize * 1.5);
+
+        if (bottom != null && top == null)
+          jump();
+
+        if (bottom != null)
+          pos.z = currBlock.pos.z - blockSize/2 + 5;
+      } if (pos.z > currBlock.pos.z + blockSize/2 - 5)
       {
-        if (!jumping)
-        {
-          jumping = true;
-          vel.y = -10;
-        }
-        pos.z = currBlock.pos.z + blockSize/2 - 5;
+        Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y, currBlock.pos.z), new PVector(0, 0, 1), blockSize * 1.5);
+        Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize, currBlock.pos.z), new PVector(0, 0, 1), blockSize * 1.5);
+
+        if (bottom != null && top == null)
+          jump();
+
+        if (bottom != null)
+          pos.z = currBlock.pos.z + blockSize/2 - 5;
       }
-      
-      currBlock = currChunk.getCurrentBlock();
     }
 
     if (currChunk != null)
@@ -203,16 +198,22 @@ class Player
 
     //Jumping animation
     if (jumping || pos.y < currBlock.pos.y - 100)
-    {
       vel.y++;
-      setCurrentBlock();
-    }
 
-    if (pos.y > currBlock.pos.y - 100)
+    if (pos.y + 100 > currBlock.pos.y)
     {
       pos.y = currBlock.pos.y - 100;
       vel.y = 0;
       jumping = false;
+    }
+  }
+
+  void jump()
+  {
+    if (!jumping)
+    {
+      jumping = true;
+      vel.y = -10;
     }
   }
 }
