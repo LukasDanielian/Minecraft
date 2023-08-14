@@ -30,7 +30,7 @@ class Chunk
 
       for (int z = 0; z < numBlocks; z++)
       {
-        int y = (int)map(noise(nx + 500, nz + 500), 0, 1, (int)map(noise((nx/100)-100,(nz/100)-100),0,1,50,75), (int)map(noise((nx/100)+100,(nz/100)+100),0,1,75,125));
+        int y = (int)map(noise(nx + 500, nz + 500), 0, 1, 100, 125);
         int by = y * blockSize;
         floorLevel[x][z] = y;
         blocks[y][x][z] = new Block(new PVector(bx, by, bz), x, y, z, this);
@@ -59,12 +59,10 @@ class Chunk
               }
             }
           }
-          
+
           blocks[y-treeTop][x][z] = new Block(new PVector(bx, by - (treeTop * blockSize), bz), x, y-treeTop, z, this);
           blocks[y-treeTop][x][z].texture = leave;
-        }
-        
-        else if(blocks[y][x][z].texture.equals(sand) && noise(x + this.x, z + this.z) > .85)
+        } else if (blocks[y][x][z].texture.equals(sand) && noise(x + this.x, z + this.z) > .85)
         {
           int cactusTop = (int)random(4, 6);
           for (int i = 1; i < cactusTop; i++)
@@ -336,7 +334,26 @@ class Chunk
                   addTop(bx, by, bz);
                 else if (texture.equals(dirt))
                   addBottom(bx, by, bz);
-              } else if (block.texture.equals(wood))
+              } 
+              
+              else if (block.texture.equals(cactus))
+              {
+                if (texture.equals(cactusTop))
+                {
+                  addTop(bx, by, bz);
+                  addBottom(bx, by, bz);
+                } 
+                
+                else if (texture.equals(cactus))
+                {
+                  addFront(bx, by, bz);
+                  addBack(bx, by, bz);
+                  addLeft(bx, by, bz);
+                  addRight(bx, by, bz);
+                }
+              }
+              
+              else if (block.texture.equals(wood))
               {
                 if (texture.equals(woodTop))
                 {
@@ -365,7 +382,6 @@ class Chunk
           }
         }
       }
-
 
       child.endShape();
       synchronized(textures)

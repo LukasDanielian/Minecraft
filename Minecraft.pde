@@ -13,7 +13,7 @@ int halfBlock = blockSize/2;
 int numBlocks = 16;
 int chunkSize = numBlocks * blockSize;
 float noiseScl = .02;
-PImage stone, dirt, sand, grassTop, grassSide, diamond, bedrock, wood, woodTop, leave, cactus;
+PImage stone, dirt, sand, grassTop, grassSide, diamond, bedrock, wood, woodTop, leave, cactus, cactusTop;
 ArrayList<PImage> textures = new ArrayList<PImage>();
 int[] xDisp = {-1, 1, 0, 0, 0, 0};
 int[] yDisp = {0, 0, 0, 0, -1, 1};
@@ -36,7 +36,7 @@ void setup()
   stone = loadImage("stone.jpg");
   dirt = loadImage("dirt.jpg");
   sand = loadImage("sand.jpg");
-  grassTop = loadImage("grassTop.jpg");
+  grassTop = loadImage("grassTop.jpg");//loadImage("abraham.jpg");
   grassSide = loadImage("grassSide.jpg");
   diamond = loadImage("diamond.jpg");
   bedrock = loadImage("bedrock.jpg");
@@ -44,6 +44,7 @@ void setup()
   woodTop = loadImage("woodTop.jpg");
   leave = loadImage("leave.png");
   cactus = loadImage("cactus.jpg");
+  cactusTop = loadImage("cactusTop.jpg");
   textures.add(stone);
   textures.add(dirt);
   textures.add(grassTop);
@@ -55,6 +56,7 @@ void setup()
   textures.add(woodTop);
   textures.add(leave);
   textures.add(cactus);
+  textures.add(cactusTop);
 
   window = (GLWindow)surface.getNative();
   keys = new boolean[256];
@@ -64,6 +66,7 @@ void setup()
   world = new World();
   world.update(world.renderDistance);
   player.setCurrentBlock();
+  player.pos.y = player.currBlock.pos.y-100;
 }
 
 void draw()
