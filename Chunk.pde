@@ -1,43 +1,85 @@
 class Chunk
 {
   int x, z;
-  float noiseX, noiseZ;
   Block[][][] blocks;
-  int[][] floorLevel = new int[16][16];
-  //y x z
+  int[][] floorLevel;
+  PShape mesh;
+  boolean updated;
 
   Chunk(int x, int z)
   {
-    noiseX = x * (noiseScl * numBlocks);
     this.x = x * chunkSize;
     this.z = z * chunkSize;
     blocks = new Block[256][numBlocks][numBlocks];
+    floorLevel = new int[numBlocks][numBlocks];
     generateChunk();
   }
 
   //Builds single floor layer of blocks at every x and z pos for chunk
   void generateChunk()
   {
-    int blockX = x + (-blockSize * numBlocks/2) + blockSize/2;
-    int blockZ = 0;
+    int bx = this.x + (-blockSize * numBlocks/2) + halfBlock;
+    int bz = 0;
+    float nx = x/chunkSize * (noiseScl * numBlocks);
+    float nz = 0;
 
     for (int x = 0; x < numBlocks; x++)
     {
-      blockZ = z + (-blockSize * numBlocks/2) + blockSize/2;
-      noiseZ = (z/chunkSize) * (noiseScl * numBlocks);
+      bz = z + (-blockSize * numBlocks/2) + halfBlock;
+      nz = (z/chunkSize) * (noiseScl * numBlocks);
 
       for (int z = 0; z < numBlocks; z++)
       {
-        int y = (int)map(noise(noiseX, noiseZ) * noise(-noiseX, -noiseZ), 0, 1, 100, 200);
-        int blockY = y * blockSize;
+        int y = (int)map(noise(nx + 500, nz + 500), 0, 1, (int)map(noise((nx/100)-100,(nz/100)-100),0,1,50,75), (int)map(noise((nx/100)+100,(nz/100)+100),0,1,75,125));
+        int by = y * blockSize;
         floorLevel[x][z] = y;
-        blocks[y][x][z] = new Block(new PVector(blockX, blockY, blockZ), x, y, z, this, false);
-        blockZ += blockSize;
-        noiseZ += noiseScl;
+        blocks[y][x][z] = new Block(new PVector(bx, by, bz), x, y, z, this);
+
+        //Spawn tree
+        if (blocks[y][x][z].texture.equals(dirt) && x > 2 && x < numBlocks-2 && z > 2 && z < numBlocks-2 && noise(x + this.x, z + this.z) > .82)
+        {
+          int treeTop = (int)random(5, 7);
+          for (int i = 1; i < treeTop; i++)
+          {
+            blocks[y-i][x][z] = new Block(new PVector(bx, by - (i * blockSize), bz), x, y-i, z, this);
+            blocks[y-i][x][z].texture = wood;
+
+            if (i > 2)
+            {
+              for (int tx = -1; tx <= 1; tx++)
+              {
+                for (int tz = -1; tz <= 1; tz++)
+                {
+                  if (blocks[y-i][x+tx][z+tz] == null)
+                  {
+                    blocks[y-i][x+tx][z+tz] = new Block(new PVector(bx + (tx * blockSize), by - (i * blockSize), bz + (tz * blockSize)), x+tx, y-i, z+tz, this);
+                    blocks[y-i][x+tx][z+tz].texture = leave;
+                  }
+                }
+              }
+            }
+          }
+          
+          blocks[y-treeTop][x][z] = new Block(new PVector(bx, by - (treeTop * blockSize), bz), x, y-treeTop, z, this);
+          blocks[y-treeTop][x][z].texture = leave;
+        }
+        
+        else if(blocks[y][x][z].texture.equals(sand) && noise(x + this.x, z + this.z) > .85)
+        {
+          int cactusTop = (int)random(4, 6);
+          for (int i = 1; i < cactusTop; i++)
+          {
+            blocks[y-i][x][z] = new Block(new PVector(bx, by - (i * blockSize), bz), x, y-i, z, this);
+            blocks[y-i][x][z].texture = cactus;
+          }
+        }
+
+        bz += blockSize;
+        nz += noiseScl;
       }
 
-      blockX += blockSize;
-      noiseX += noiseScl;
+      bx += blockSize;
+      nx += noiseScl;
     }
   }
 
@@ -66,25 +108,30 @@ class Chunk
         for (int i = 1; i < largestGap; i++)
         {
           if (blocks[block.y+i][x][z] == null && !minedBlocks.contains(this.x/chunkSize + "x" + this.z/chunkSize + "x" + x + "x" + (block.y+i) + "x" + z))
-            blocks[block.y+i][x][z] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), x, block.y + i, z, this, true);
+            blocks[block.y+i][x][z] = new Block(new PVector(block.pos.x, block.pos.y + (i * blockSize), block.pos.z), x, block.y + i, z, this);
         }
       }
     }
   }
 
-  void updateFaces()
+  void buildMesh()
   {
-    for (int y = 0; y < blocks.length; y++)
-    {
-      for (int x = 0; x < blocks[y].length; x++)
-      {
-        for (int z = 0; z < blocks[y][x].length; z++)
-        {
-          Block block = blocks[y][x][z];
+    ArrayList<Thread> threads = new ArrayList<Thread>();
+    mesh = createShape(GROUP);
 
-          if (block != null)
-            getAllNeighbors(block);
-        }
+    for (int i = 0; i < textures.size(); i++)
+    {
+      Thread thread = new Thread(new MeshBuilder(textures.get(i)));
+      thread.start();
+      threads.add(thread);
+    }
+
+    for (Thread thread : threads)
+    {
+      try {
+        thread.join();
+      }
+      catch(InterruptedException e) {
       }
     }
   }
@@ -118,44 +165,31 @@ class Chunk
         bz = 0;
       }
 
-      if ((chunk != null && chunk.blocks[by][bx][bz] == null && by < chunk.getTopBlock(bx, bz).y) || (chunk != null && minedBlocks.contains(chunk.x/chunkSize + "x" + chunk.z/chunkSize + "x" + bx + "x" + by + "x" + bz)))
-        block.renderSide[i] = true;
       if (chunk != null)
       {
         if (chunk.blocks[by][bx][bz] == null && by > chunk.getTopBlock(bx, bz).y)
-          neighbors[i] = new Block(new PVector(block.pos.x + xDisp[i] * blockSize, block.pos.y + yDisp[i] * blockSize, block.pos.z + zDisp[i] * blockSize), bx, by, bz, chunk, true);
+          neighbors[i] = new Block(new PVector(block.pos.x + xDisp[i] * blockSize, block.pos.y + yDisp[i] * blockSize, block.pos.z + zDisp[i] * blockSize), bx, by, bz, chunk);
       }
     }
 
     return neighbors;
   }
 
-  //renders every block in chunk
+  //renders mesh
   void render()
   {
-    for (int y = 0; y < blocks.length; y++)
-    {
-      for (int x = 0; x < blocks[y].length; x++)
-      {
-        for (int z = 0; z < blocks[y][x].length; z++)
-        {
-          Block block = blocks[y][x][z];
-
-          if (block != null)
-            block.render();
-        }
-      }
-    }
+    shape(mesh);
   }
 
   Block checkHitScan(PVector center, PVector looking)
   {
     ArrayList<Block> blocksHit = new ArrayList<Block>();
-    for (int y = 0; y < blocks.length; y++)
+
+    for (int x = 0; x < blocks[0].length; x++)
     {
-      for (int x = 0; x < blocks[y].length; x++)
+      for (int z = 0; z < blocks[0][0].length; z++)
       {
-        for (int z = 0; z < blocks[y][x].length; z++)
+        for (int y = floorLevel[x][z] - 15; y < blocks.length; y++)
         {
           Block block = blocks[y][x][z];
 
@@ -257,5 +291,153 @@ class Chunk
     }
 
     return null;
+  }
+
+  class MeshBuilder implements Runnable
+  {
+    PImage texture;
+    PShape child;
+
+    MeshBuilder(PImage texture)
+    {
+      this.texture = texture;
+      child = createShape();
+    }
+
+    void run()
+    {
+      child.beginShape(TRIANGLES);
+      child.texture(texture);
+
+      for (int x = 0; x < blocks[0].length; x++)
+      {
+        for (int z = 0; z < blocks[0][0].length; z++)
+        {
+          for (int y = floorLevel[x][z] - 15; y < blocks.length; y++)
+          {
+            Block block = blocks[y][x][z];
+
+            if (block != null)
+            {
+              float bx = block.pos.x;
+              float by = block.pos.y;
+              float bz = block.pos.z;
+
+              //Dirt textures
+              if (block.texture.equals(dirt) && block.y == floorLevel[block.x][block.z])
+              {
+                if (texture.equals(grassSide))
+                {
+                  addFront(bx, by, bz);
+                  addBack(bx, by, bz);
+                  addLeft(bx, by, bz);
+                  addRight(bx, by, bz);
+                } else if (texture.equals(grassTop))
+                  addTop(bx, by, bz);
+                else if (texture.equals(dirt))
+                  addBottom(bx, by, bz);
+              } else if (block.texture.equals(wood))
+              {
+                if (texture.equals(woodTop))
+                {
+                  addTop(bx, by, bz);
+                  addBottom(bx, by, bz);
+                } else if (texture.equals(wood))
+                {
+                  addFront(bx, by, bz);
+                  addBack(bx, by, bz);
+                  addLeft(bx, by, bz);
+                  addRight(bx, by, bz);
+                }
+              }
+
+              //Normal textures
+              else if (texture.equals(block.texture))
+              {
+                addFront(bx, by, bz);
+                addBack(bx, by, bz);
+                addTop(bx, by, bz);
+                addBottom(bx, by, bz);
+                addLeft(bx, by, bz);
+                addRight(bx, by, bz);
+              }
+            }
+          }
+        }
+      }
+
+
+      child.endShape();
+      synchronized(textures)
+      {
+        mesh.addChild(child);
+      }
+    }
+
+    void addFront(float bx, float by, float bz)
+    {
+      child.vertex(bx + -halfBlock, by + -halfBlock, bz + halfBlock, 0, 0);
+      child.vertex(bx + halfBlock, by + -halfBlock, bz + halfBlock, 1, 0);
+      child.vertex(bx + -halfBlock, by + halfBlock, bz + halfBlock, 0, 1);
+
+      child.vertex(bx + halfBlock, by + -halfBlock, bz + halfBlock, 1, 0);
+      child.vertex(bx + halfBlock, by +halfBlock, bz + halfBlock, 1, 1);
+      child.vertex(bx + -halfBlock, by + halfBlock, bz + halfBlock, 0, 1);
+    }
+
+    void addBack(float bx, float by, float bz)
+    {
+      child.vertex(bx + halfBlock, by + -halfBlock, bz + -halfBlock, 0, 0);
+      child.vertex(bx + -halfBlock, by + -halfBlock, bz + -halfBlock, 1, 0);
+      child.vertex(bx + halfBlock, by + halfBlock, bz + -halfBlock, 0, 1);
+
+      child.vertex(bx + -halfBlock, by + -halfBlock, bz + -halfBlock, 1, 0);
+      child.vertex(bx + -halfBlock, by +halfBlock, bz + -halfBlock, 1, 1);
+      child.vertex(bx + halfBlock, by + halfBlock, bz + -halfBlock, 0, 1);
+    }
+
+    void addTop(float bx, float by, float bz)
+    {
+      child.vertex(bx + -halfBlock, by + -halfBlock, bz + -halfBlock, 0, 0);
+      child.vertex(bx + halfBlock, by + -halfBlock, bz + -halfBlock, 1, 0);
+      child.vertex(bx + -halfBlock, by +-halfBlock, bz + halfBlock, 0, 1);
+
+      child.vertex(bx + halfBlock, by + -halfBlock, bz + -halfBlock, 1, 0);
+      child.vertex(bx + halfBlock, by + -halfBlock, bz + halfBlock, 1, 1);
+      child.vertex(bx + -halfBlock, by + -halfBlock, bz + halfBlock, 0, 1);
+    }
+
+    void addBottom(float bx, float by, float bz)
+    {
+      child.vertex(bx + -halfBlock, by + halfBlock, bz +halfBlock, 0, 0);
+      child.vertex(bx + halfBlock, by + halfBlock, bz + halfBlock, 1, 0);
+      child.vertex(bx + -halfBlock, by + halfBlock, bz +-halfBlock, 0, 1);
+
+      child.vertex(bx + halfBlock, by + halfBlock, bz +halfBlock, 1, 0);
+      child.vertex(bx + halfBlock, by + halfBlock, bz + -halfBlock, 1, 1);
+      child.vertex(bx + -halfBlock, by + halfBlock, bz +-halfBlock, 0, 1);
+    }
+
+    void addLeft(float bx, float by, float bz)
+    {
+      child.vertex(bx + -halfBlock, by + -halfBlock, bz +-halfBlock, 0, 0);
+      child.vertex(bx + -halfBlock, by + -halfBlock, bz +halfBlock, 1, 0);
+      child.vertex(bx + -halfBlock, by + halfBlock, bz + -halfBlock, 0, 1);
+
+      child.vertex(bx + -halfBlock, by + -halfBlock, bz +halfBlock, 1, 0);
+      child.vertex(bx + -halfBlock, by + halfBlock, bz +halfBlock, 1, 1);
+      child.vertex(bx + -halfBlock, by + halfBlock, bz + -halfBlock, 0, 1);
+    }
+
+    void addRight(float bx, float by, float bz)
+    {
+      child.vertex(bx + halfBlock, by + -halfBlock, bz + halfBlock, 0, 0);
+      child.vertex(bx + halfBlock, by + -halfBlock, bz + -halfBlock, 1, 0);
+      child.vertex(bx + halfBlock, by + halfBlock, bz + halfBlock, 0, 1);
+
+      child.vertex(bx + halfBlock, by + -halfBlock, bz + -halfBlock, 1, 0);
+      child.vertex(bx + halfBlock, by + halfBlock, bz +-halfBlock, 1, 1);
+      child.vertex(bx + halfBlock, by + halfBlock, bz + halfBlock, 0, 1);
+    }
   }
 }

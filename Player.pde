@@ -3,7 +3,7 @@ class Player
   float yaw, pitch, speed;
   int chunkX, chunkZ;
   PVector pos, lastPos, view, vel;
-  boolean jumping, climbing;
+  boolean jumping;
   Chunk currChunk;
   Block currBlock, lookingAt;
 
@@ -37,6 +37,16 @@ class Player
     view = new PVector(cos(yaw) * cos(pitch), -sin(pitch), sin(yaw) * cos(pitch)).mult(-1);
     perspective(PI/2.5, float(width)/height, .01, width * width);
     camera(pos.x, pos.y, pos.z, pos.x + view.x, pos.y + view.y, pos.z + view.z, 0, 1, 0);
+    
+    Block block = world.checkHitScan(player.pos.copy(), player.view.copy(), chunkSize);
+    
+    if(block != null)
+    {
+      lookingAt = block;
+      lookingAt.render();
+    }
+    else
+      lookingAt = null;
   }
 
   //On screen info
@@ -130,7 +140,7 @@ class Player
     if (currBlock != null)
     {
       //left block
-      if (pos.x < currBlock.pos.x - blockSize/2 + 5)
+      if (pos.x < currBlock.pos.x - halfBlock + 5)
       {
         Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y-15, currBlock.pos.z), new PVector(-1, 0, 0), blockSize + 15);
         Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize+5, currBlock.pos.z), new PVector(-1, 0, 0), blockSize + 15);
@@ -139,11 +149,11 @@ class Player
           jump();
 
         if (bottom != null || top != null)
-          pos.x = currBlock.pos.x - blockSize/2 + 5;
+          pos.x = currBlock.pos.x - halfBlock + 5;
       } 
       
       //right block
-      if (pos.x > currBlock.pos.x + blockSize/2 - 5)
+      if (pos.x > currBlock.pos.x + halfBlock - 5)
       {
         Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y-15, currBlock.pos.z), new PVector(1, 0, 0), blockSize + 15);
         Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize+5, currBlock.pos.z), new PVector(1, 0, 0), blockSize + 15);
@@ -152,11 +162,11 @@ class Player
           jump();
 
         if (bottom != null || top != null)
-          pos.x = currBlock.pos.x + blockSize/2 - 5;
+          pos.x = currBlock.pos.x + halfBlock - 5;
       } 
       
       //front block
-      if (pos.z < currBlock.pos.z - blockSize/2 + 5)
+      if (pos.z < currBlock.pos.z - halfBlock + 5)
       {
         Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y-15, currBlock.pos.z), new PVector(0, 0, -1), blockSize + 15);
         Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize+5, currBlock.pos.z), new PVector(0, 0, -1), blockSize + 15);
@@ -165,11 +175,11 @@ class Player
           jump();
 
         if (bottom != null || top != null)
-          pos.z = currBlock.pos.z - blockSize/2 + 5;
+          pos.z = currBlock.pos.z - halfBlock + 5;
       } 
       
       //back block
-      if (pos.z > currBlock.pos.z + blockSize/2 - 5)
+      if (pos.z > currBlock.pos.z + halfBlock - 5)
       {
         Block top = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y-15, currBlock.pos.z), new PVector(0, 0, 1), blockSize + 15);
         Block bottom = world.checkHitScan(new PVector(currBlock.pos.x, player.pos.y+blockSize+5, currBlock.pos.z), new PVector(0, 0, 1), blockSize + 15);
@@ -178,26 +188,47 @@ class Player
           jump();
 
         if (bottom != null || top != null)
-          pos.z = currBlock.pos.z + blockSize/2 - 5;
+          pos.z = currBlock.pos.z + halfBlock - 5;
       }
+      
+      currBlock = world.checkHitScan(new PVector(player.pos.x, player.pos.y, player.pos.z), new PVector(0, 1, 0), blockSize * 265);
     }
 
     if (currChunk != null)
     {
       if (pos.x < currChunk.x - chunkSize/2)
+      {
+        for(int z = -world.renderDistance; z <= world.renderDistance; z++)
+          world.chunks.get(world.cordString(chunkX - world.renderDistance,chunkZ + z)).updated = false;
+       
         chunkX--;
+      }
       else if (pos.x > currChunk.x + chunkSize/2)
+      {
+        for(int z = -world.renderDistance; z <= world.renderDistance; z++)
+          world.chunks.get(world.cordString(chunkX + world.renderDistance,chunkZ + z)).updated = false;
+          
         chunkX++;
+      }
       else if (pos.z < currChunk.z - chunkSize/2)
+      {
+        for(int x = -world.renderDistance; x <= world.renderDistance; x++)
+          world.chunks.get(world.cordString(chunkX + x,chunkZ - world.renderDistance)).updated = false;
+          
         chunkZ--;
+      }
       else if (pos.z > currChunk.z + chunkSize/2)
+      {
+        for(int x = -world.renderDistance; x <= world.renderDistance; x++)
+          world.chunks.get(world.cordString(chunkX + x,chunkZ + world.renderDistance)).updated = false;
+          
         chunkZ++;
+      }
       else
         return;
 
-      world.updateChunks();
-      world.updateMesh();
-      currChunk = world.getCurrentChunk();
+      world.update(world.renderDistance);
+      setCurrentBlock();
     }
   }
 
@@ -220,10 +251,7 @@ class Player
 
   void jump()
   {
-    if(jumping)
-      return;
-
-    if(world.checkHitScan(new PVector(currBlock.pos.x,currBlock.pos.y-blockSize,currBlock.pos.z),new PVector(0,-1,0),(blockSize * 2) - 5) == null)
+    if(!jumping && world.checkHitScan(new PVector(currBlock.pos.x,currBlock.pos.y-blockSize,currBlock.pos.z),new PVector(0,-1,0),(blockSize * 2) - 5) == null)
     {
       jumping = true;
       vel.y = -10;

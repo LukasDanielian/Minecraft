@@ -2,86 +2,49 @@ class Block implements Comparable<Block>
 {
   PVector pos;
   int x, y, z;
-  PImage texture;
-  boolean lookingAt;
   Chunk chunk;
-  boolean[] renderSide = new boolean[6];
-  boolean underground;
+  PImage texture;
 
-  Block(PVector pos, int x, int y, int z, Chunk chunk, boolean underground)
+  Block(PVector pos, int x, int y, int z, Chunk chunk)
   {
     this.pos = pos;
     this.x = x;
     this.y = y;
     this.z = z;
     this.chunk = chunk;
-    this.underground = underground;
-    float noise = noise(pos.x/2000, pos.z/2000);
 
+    float noise  = noise(pos.x/10000, pos.z/10000);
 
-    //underground
-    if (y > chunk.floorLevel[x][z] + 5)
+    if (y > 250)
+      texture = bedrock;
+
+    else if (y > chunk.floorLevel[x][z] + 5)
     {
-      if (y > 256-3)
-        texture = bedrock;
+      texture = stone;
 
-      else
-      {
-        texture = stone;
-
-        if (noise > .5)
-          texture = diamond;
-      }
-    }
-
-    //above ground
+      if (noise < .05)
+        texture = diamond;
+    } 
+    
     else
     {
-      if (noise > .25)
-        texture = dirt;
-      else
+      if (noise > .5)
         texture = sand;
+      else
+        texture = dirt;
     }
   }
-
+  
   void render()
   {
+    noFill();
+    stroke(0);
+    strokeWeight(2);
     push();
-    translate(pos.x, pos.y, pos.z);
-    if (lookingAt)
-    {
-      noFill();
-      stroke(0);
-      strokeWeight(1);
-      box(blockSize);
-    }
-    for (int i = 0; i < xDisp.length; i++)
-    {
-      if (renderSide[i])
-      {
-        push();
-        translate(xDisp[i] * blockSize/2, yDisp[i] * blockSize/2, zDisp[i] * blockSize/2);
-        if (xDisp[i] != 0)
-          rotateY(HALF_PI);
-        else if (yDisp[i] != 0)
-          rotateX(HALF_PI);
-
-        if (texture.equals(dirt) && !underground)
-        {
-          if (xDisp[i] != 0 || zDisp[i] != 0)
-            image(grassSide, 0, 0);
-          else if (yDisp[i] < 0)
-            image(grassTop, 0, 0);
-          else
-            image(dirt, 0, 0);
-        } else
-          image(texture, 0, 0);
-        pop();
-      }
-    }
+    translate(pos.x,pos.y,pos.z);
+    box(blockSize);
     pop();
-
-    lookingAt = false;
+    noStroke();
   }
 
   int compareTo(Block block)
@@ -92,8 +55,8 @@ class Block implements Comparable<Block>
   //little help from chatGPT
   boolean hitScan(PVector rayOrigin, PVector rayDirection)
   {
-    PVector minBounds = new PVector(pos.x - blockSize / 2, pos.y - blockSize / 2, pos.z - blockSize / 2);
-    PVector maxBounds = new PVector(pos.x + blockSize / 2, pos.y + blockSize / 2, pos.z + blockSize / 2);
+    PVector minBounds = new PVector(pos.x - halfBlock, pos.y - halfBlock, pos.z - halfBlock);
+    PVector maxBounds = new PVector(pos.x + halfBlock, pos.y + halfBlock, pos.z + halfBlock);
     PVector invRayDirection = new PVector(1.0 / rayDirection.x, 1.0 / rayDirection.y, 1.0 / rayDirection.z);
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
 

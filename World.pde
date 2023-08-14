@@ -1,52 +1,75 @@
 class World
 {
   HashMap<String, Chunk> chunks;
-  //int[] DEPTH_DISP = {-1, -1, -1, 0, 0, 0, 1, 1, 1,0,-1,-2,-2,-2,-2,-2,-1,0,1,2,2,2,2,2,1};
-  //int[] HORIZ_DISP = {-1, 0, 1, -1, 0, 1, -1, 0, 1,-2,-2,-2,-1,0,1,2,2,2,2,2,1,0,-1,-2,-2};
-  int[] DEPTH_DISP = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
-  int[] HORIZ_DISP = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
+  int renderDistance = 10;
+  PShape clouds;
 
   public World()
   {
     chunks = new HashMap<String, Chunk>();
+    clouds = createShape(GROUP);
+
+    for (int x = -renderDistance * chunkSize * 4; x <= renderDistance * chunkSize * 4; x += chunkSize/4)
+    {
+      for (int z = -renderDistance * chunkSize * 4; z <= renderDistance * chunkSize * 4; z += chunkSize/4)
+      {
+        if (noise((x/2500) + 100, (z/2500) + 100) > .6)
+        {
+          PShape box = createShape(BOX, chunkSize/4);
+          box.beginShape(BOX);
+          box.translate(x, 0, z);
+          box.fill(255);
+          box.endShape();
+          clouds.addChild(box);
+        }
+      }
+    }
   }
 
-  //renders 9 chunks including current and all adjecent chunks
+  //renders chunks including current and all adjecent chunks
   void render()
   {
-    for (int i = 0; i < DEPTH_DISP.length; i++)
-      chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i])).render();
-
-    Block lookingAt = checkHitScan(player.pos.copy(),player.view.copy(),chunkSize);
-    player.currBlock = checkHitScan(new PVector(player.pos.x,player.pos.y,player.pos.z),new PVector(0,1,0),blockSize * 265);
-    
-    if(lookingAt != null)
+    for (int x = -renderDistance; x <= renderDistance; x++)
     {
-      lookingAt.lookingAt = true;
-      player.lookingAt = lookingAt;
+      for (int z = -renderDistance; z <= renderDistance; z++)
+        chunks.get(cordString(player.chunkX + x, player.chunkZ + z)).render();
     }
-    
-    //not looking at anything
-    else
-      player.lookingAt = null;
+
+    noLights();
+    push();
+    translate(player.pos.x,player.pos.y - blockSize * 100,player.pos.z);
+    shape(clouds);
+    translate(chunkSize * 4,-width/2,chunkSize * 4);
+    fill(#F7E323);
+    box(chunkSize,1,chunkSize);
+    pop();
   }
-  
+
+  void update(int dist)
+  {
+    updateChunks(dist);
+    updateMesh(dist);
+  }
+
   Block checkHitScan(PVector center, PVector looking, float range)
   {
     ArrayList<Block> blocks = new ArrayList<Block>();
-    
-    for (int i = 0; i < DEPTH_DISP.length; i++)
+
+    for (int x = -1; x <= 1; x++)
     {
-      Chunk chunk = chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i]));
-      Block block = chunk.checkHitScan(center,looking);
-      
-      if(block != null)
-        blocks.add(block);
+      for (int z = -1; z <= 1; z++)
+      {
+        Chunk chunk = chunks.get(cordString(player.chunkX + x, player.chunkZ + z));
+        Block block = chunk.checkHitScan(center, looking);
+
+        if (block != null)
+          blocks.add(block);
+      }
     }
-    
+
     float lowestDist = range;
     int num = -1;
-    
+
     for (int i = 0; i < blocks.size(); i++)
     {
       Block block = blocks.get(i);
@@ -59,7 +82,7 @@ class World
         lowestDist = dist;
       }
     }
-    
+
     if (num != -1)
       return blocks.get(num);
     else
@@ -67,28 +90,50 @@ class World
   }
 
   //resets center chunk and adds new chunks if needed
-  void updateChunks()
+  void updateChunks(int renderDistance)
   {
-    for (int i = 0; i < DEPTH_DISP.length; i++)
+    for (int x = -renderDistance; x <= renderDistance; x++)
     {
-      Chunk chunk = chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i]));
-
-      //brand new chunk
-      if (chunk == null)
+      for (int z = -renderDistance; z <= renderDistance; z++)
       {
-        chunk = new Chunk(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i]);
-        chunks.put(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i]), chunk);
+        Chunk chunk = chunks.get(cordString(player.chunkX + x, player.chunkZ + z));
+
+        //brand new chunk
+        if (chunk == null)
+        {
+          chunk = new Chunk(player.chunkX + x, player.chunkZ + z);
+          chunks.put(cordString(player.chunkX + x, player.chunkZ + z), chunk);
+        }
       }
     }
   }
 
-  void updateMesh()
+  void updateMesh(int renderDistance)
   {
-    for (int i = 0; i < DEPTH_DISP.length; i++)
-      chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i])).updateBlocksUnder();
-      
-    for(int i = 0; i < DEPTH_DISP.length; i++)
-      chunks.get(cordString(player.chunkX + HORIZ_DISP[i], player.chunkZ + DEPTH_DISP[i])).updateFaces();
+    for (int x = -renderDistance; x <= renderDistance; x++)
+    {
+      for (int z = -renderDistance; z <= renderDistance; z++)
+      {
+        Chunk chunk = chunks.get(cordString(player.chunkX + x, player.chunkZ + z));
+
+        if (!chunk.updated || renderDistance == 1)
+          chunk.updateBlocksUnder();
+      }
+    }
+
+    for (int x = -renderDistance; x <= renderDistance; x++)
+    {
+      for (int z = -renderDistance; z <= renderDistance; z++)
+      {
+        Chunk chunk = chunks.get(cordString(player.chunkX + x, player.chunkZ + z));
+
+        if (!chunk.updated || renderDistance == 1)
+        {
+          chunk.buildMesh();
+          chunk.updated = true;
+        }
+      }
+    }
   }
 
   //returns current chunk of player

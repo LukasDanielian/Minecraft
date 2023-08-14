@@ -57,16 +57,16 @@ void mousePressed()
   {
     minedBlocks.add(block.chunk.x/chunkSize + "x" + block.chunk.z/chunkSize + "x" + block.x + "x" + block.y + "x" + block.z);
     Block[] neighbors = block.chunk.getAllNeighbors(block);
-    
-    for(int i = 0; i < neighbors.length; i++)
+
+    for (int i = 0; i < neighbors.length; i++)
     {
       Block nBlock = neighbors[i];
-      
-      if(nBlock != null && !minedBlocks.contains(nBlock.chunk.x/chunkSize + "x" + nBlock.chunk.z/chunkSize + "x" + nBlock.x + "x" + nBlock.y + "x" + nBlock.z))
+
+      if (nBlock != null && !minedBlocks.contains(nBlock.chunk.x/chunkSize + "x" + nBlock.chunk.z/chunkSize + "x" + nBlock.x + "x" + nBlock.y + "x" + nBlock.z))
         nBlock.chunk.blocks[nBlock.y][nBlock.x][nBlock.z] = neighbors[i];
     }
 
     block.chunk.blocks[block.y][block.x][block.z] = null;
-    world.updateMesh();
+    world.update(1);
   }
 }
