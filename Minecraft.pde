@@ -36,7 +36,7 @@ void setup()
   stone = loadImage("stone.jpg");
   dirt = loadImage("dirt.jpg");
   sand = loadImage("sand.jpg");
-  grassTop = loadImage("grassTop.jpg");//loadImage("abraham.jpg");
+  grassTop = loadImage("grassTop.jpg");
   grassSide = loadImage("grassSide.jpg");
   diamond = loadImage("diamond.jpg");
   bedrock = loadImage("bedrock.jpg");
