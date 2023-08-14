@@ -304,6 +304,7 @@ class Chunk
 
     void run()
     {
+      child.setStroke(false);
       child.beginShape(TRIANGLES);
       child.texture(texture);
 

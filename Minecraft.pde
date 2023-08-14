@@ -19,6 +19,7 @@ int[] xDisp = {-1, 1, 0, 0, 0, 0};
 int[] yDisp = {0, 0, 0, 0, -1, 1};
 int[] zDisp = {0, 0, -1, 1, 0, 0};
 HashSet<String> minedBlocks = new HashSet<String>();
+boolean doneLoading;
 
 void setup()
 {
@@ -32,7 +33,44 @@ void setup()
   frameRate(60);
   textSize(128);
   noStroke();
+  
+  thread("loadEverything");
+}
 
+void draw()
+{
+  background(#16819D);
+  lights();
+  directionalLight(200, 200, 200, .9, 1, .9);
+
+  if(!doneLoading)
+  {
+    background(0);
+    text("Danielian Softworks®", width/2, height * .15);
+    push();
+    translate(width/2,height * .6,-500);
+    rotateX(frameCount * .01);
+    rotateY(frameCount * .01);
+    rotateZ(frameCount * .01);
+    noFill();
+    stroke(255);
+    box(width/4);
+    noStroke();
+    fill(#280F58);
+    if(world != null)
+      box(map(world.chunksFinished,0,(20+1+20) * (20+1+20),0,width/4));
+    pop();
+  }
+  else
+  {
+    player.render();
+    world.render();
+    player.renderHUD();
+  }
+}
+
+void loadEverything()
+{
   stone = loadImage("stone.jpg");
   dirt = loadImage("dirt.jpg");
   sand = loadImage("sand.jpg");
@@ -59,23 +97,12 @@ void setup()
   textures.add(cactusTop);
 
   window = (GLWindow)surface.getNative();
-  keys = new boolean[256];
   oldMouse = new PVector(mouseX, mouseY);
   lockMouse();
   player = new Player();
   world = new World();
-  world.update(world.renderDistance);
+  world.update(20);
   player.setCurrentBlock();
   player.pos.y = player.currBlock.pos.y-100;
-}
-
-void draw()
-{
-  background(#16819D);
-  lights();
-  directionalLight(200, 200, 200, .9, 1, .9);
-
-  player.render();
-  world.render();
-  player.renderHUD();
+  doneLoading = true;
 }

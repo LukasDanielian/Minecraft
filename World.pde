@@ -3,6 +3,7 @@ class World
   HashMap<String, Chunk> chunks;
   int renderDistance = 10;
   PShape clouds;
+  int chunksFinished;
 
   public World()
   {
@@ -16,6 +17,7 @@ class World
         if (noise((x/2500) + 100, (z/2500) + 100) > .6)
         {
           PShape box = createShape(BOX, chunkSize/4);
+          box.setStroke(false);
           box.beginShape(BOX);
           box.translate(x, 0, z);
           box.fill(255);
@@ -131,6 +133,7 @@ class World
         {
           chunk.buildMesh();
           chunk.updated = true;
+          chunksFinished++;
         }
       }
     }
