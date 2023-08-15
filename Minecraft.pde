@@ -55,7 +55,7 @@ void draw()
     noFill();
     stroke(255);
     box(width/4);
-    noStroke();
+    stroke(0);
     fill(#280F58);
     if(world != null)
       box(map(world.chunksFinished,0,(20+1+20) * (20+1+20),0,width/4));
