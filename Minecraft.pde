@@ -46,6 +46,7 @@ void draw()
   if(!doneLoading)
   {
     background(0);
+    fill(#280F58);
     text("Danielian Softworks®", width/2, height * .15);
     push();
     translate(width/2,height * .6,-500);

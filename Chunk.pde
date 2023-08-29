@@ -30,7 +30,7 @@ class Chunk
 
       for (int z = 0; z < numBlocks; z++)
       {
-        int y = (int)map(noise(nx + 500, nz + 500), 0, 1, 100, 125);
+        int y = (int)map(noise(nx + 500, nz + 500), 0, 1, 100, 150);
         int by = y * blockSize;
         floorLevel[x][z] = y;
         blocks[y][x][z] = new Block(new PVector(bx, by, bz), x, y, z, this);
