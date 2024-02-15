@@ -40,8 +40,8 @@ void setup()
 void draw()
 {
   background(#16819D);
-  lights();
-  directionalLight(200, 200, 200, .9, 1, .9);
+  //lights();
+  //directionalLight(200, 200, 200, .9, 1, .9);
 
   if(!doneLoading)
   {
