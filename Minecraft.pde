@@ -23,7 +23,7 @@ boolean doneLoading;
 
 void setup()
 {
-  fullScreen(P3D);
+  fullScreen(P3D,2);
   rectMode(CENTER);
   textAlign(CENTER, CENTER);
   imageMode(CENTER);
